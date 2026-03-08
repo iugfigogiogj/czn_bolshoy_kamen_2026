@@ -61,6 +61,10 @@ const API = {
         return await this.get('/api/news');
     },
 
+    async getNewsById(id) {
+        return await this.get(`/api/news/${id}`);
+    },
+
     async createNews(newsData) {
         return await this.post('/api/news', newsData);
     },
@@ -76,6 +80,10 @@ const API = {
     // ========== ВАКАНСИИ ==========
     async getVacancies() {
         return await this.get('/api/vacancies');
+    },
+
+    async getVacancyById(id) {
+        return await this.get(`/api/vacancies/${id}`);
     },
 
     async createVacancy(vacancyData) {
@@ -109,5 +117,9 @@ const API = {
 
     async rejectReview(reviewId) {
         return await this.post(`/api/reviews/${reviewId}/reject`, {});
+    },
+
+    async deleteReview(reviewId) {
+        return await this.delete(`/api/reviews/${reviewId}`);
     }
 };
