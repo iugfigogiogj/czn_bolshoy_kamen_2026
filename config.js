@@ -11,7 +11,7 @@ const CONFIG = {
     // Пароль для админки
     ADMIN_PASSWORD: 'B0lsh0jK@men',
     
-    // Ключи для localStorage (теперь только для авторизации)
+    // Ключи для localStorage (только для авторизации)
     STORAGE_KEYS: {
         AUTH: 'czbn_auth'
     }
