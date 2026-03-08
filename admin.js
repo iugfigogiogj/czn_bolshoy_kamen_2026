@@ -1,5 +1,37 @@
 // ========== АДМИН-ПАНЕЛЬ ==========
 
+// ========== АВТОРИЗАЦИЯ ==========
+function login() {
+    const pass = document.getElementById('password').value;
+    if (pass === CONFIG.ADMIN_PASSWORD) {
+        localStorage.setItem(CONFIG.STORAGE_KEYS.AUTH, 'true');
+        document.getElementById('loginForm').style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'block';
+        loadNewsList();
+        loadVacanciesList();
+        loadReviews();
+        renderVacancyDetails();
+        document.getElementById('loginError').style.display = 'none';
+    } else {
+        document.getElementById('loginError').style.display = 'block';
+    }
+}
+
+function logout() {
+    localStorage.removeItem(CONFIG.STORAGE_KEYS.AUTH);
+    location.reload();
+}
+
+// Проверка авторизации при загрузке
+if (localStorage.getItem(CONFIG.STORAGE_KEYS.AUTH) === 'true') {
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('adminPanel').style.display = 'block';
+    loadNewsList();
+    loadVacanciesList();
+    loadReviews();
+    renderVacancyDetails();
+}
+
 let currentNewsId = null;
 let currentVacancyId = null;
 let newsTags = [];
