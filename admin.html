@@ -33,6 +33,14 @@
             justify-content: space-between;
             align-items: center;
             background: linear-gradient(135deg, #003A70 0%, #0066B3 100%);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
         }
         
         .login-form {
@@ -177,6 +185,49 @@
             font-size: 12px;
             display: block;
             margin-top: 5px;
+        }
+        
+        /* КНОПКИ ЭКСПОРТА/ИМПОРТА */
+        .export-btn, .import-btn {
+            padding: 10px 20px;
+            background: #00A650;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .export-btn:hover, .import-btn:hover {
+            background: #008f42;
+        }
+        
+        .export-btn {
+            background: #0066B3;
+        }
+        
+        .export-btn:hover {
+            background: #003A70;
+        }
+        
+        .logout-btn {
+            padding: 10px 20px;
+            background: #E31B23;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+        }
+        
+        .logout-btn:hover {
+            background: #c41a21;
         }
         
         /* ЗАГРУЗКА ФОТО */
@@ -422,7 +473,7 @@
             background: #008f42;
         }
         
-        /* КНОПКИ */
+        /* КНОПКИ СОХРАНЕНИЯ */
         .save-btn {
             padding: 14px 30px;
             background: #00A650;
@@ -437,20 +488,6 @@
         
         .save-btn:hover {
             background: #008f42;
-        }
-        
-        .logout-btn {
-            padding: 10px 20px;
-            background: #E31B23;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 15px;
-        }
-        
-        .logout-btn:hover {
-            background: #c41a21;
         }
         
         /* СПИСКИ */
@@ -866,7 +903,7 @@
             text-decoration: underline;
         }
         
-        /* Адаптивность */
+        /* ========== АДАПТАЦИЯ ДЛЯ МОБИЛЬНЫХ ========== */
         @media (max-width: 1024px) {
             .reviews-grid {
                 grid-template-columns: repeat(2, 1fr);
@@ -874,13 +911,89 @@
         }
         
         @media (max-width: 768px) {
+            .tabs {
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .tab-btn {
+                width: 100%;
+                padding: 10px;
+                font-size: 14px;
+            }
+            
             .reviews-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: 1fr !important;
             }
             
             .reviews-header {
                 flex-direction: column;
                 align-items: flex-start;
+            }
+            
+            .reviews-stats {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .filter-container {
+                flex-direction: column;
+            }
+            
+            .filter-btn {
+                width: 100%;
+            }
+            
+            .list-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .item-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+            
+            .form-group input,
+            .form-group textarea,
+            .form-group select {
+                font-size: 16px;
+            }
+            
+            .badge-selector {
+                gap: 5px;
+            }
+            
+            .badge-option {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+            
+            .image-upload-container {
+                padding: 15px;
+            }
+            
+            .upload-icon {
+                font-size: 32px;
+            }
+            
+            .upload-text {
+                font-size: 14px;
+            }
+            
+            .header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .header-actions {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .export-btn, .import-btn, .logout-btn {
+                flex: 1;
+                justify-content: center;
             }
         }
     </style>
@@ -902,7 +1015,12 @@
         <div class="admin-panel" id="adminPanel">
             <div class="header">
                 <h1>Управление контентом</h1>
-                <button class="logout-btn" onclick="logout()">Выйти</button>
+                <div class="header-actions">
+                    <button class="export-btn" onclick="exportData()">📤 Экспорт</button>
+                    <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(this)">
+                    <button class="import-btn" onclick="document.getElementById('importFile').click()">📥 Импорт</button>
+                    <button class="logout-btn" onclick="logout()">Выйти</button>
+                </div>
             </div>
             
             <!-- Вкладки -->
@@ -1773,6 +1891,53 @@ window.addEventListener('storage', function(e) {
         loadReviewsFromStorage();
     }
 });
+
+        // ========== ЭКСПОРТ/ИМПОРТ ДАННЫХ ==========
+        function exportData() {
+            const data = {
+                news: localStorage.getItem(CONFIG.STORAGE_KEYS.NEWS) || '[]',
+                vacancies: localStorage.getItem(CONFIG.STORAGE_KEYS.VACANCIES) || '[]',
+                reviews: localStorage.getItem('reviews') || '[]',
+                date: new Date().toLocaleString()
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `czbn_backup_${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importData(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if (data.news) localStorage.setItem(CONFIG.STORAGE_KEYS.NEWS, data.news);
+                    if (data.vacancies) localStorage.setItem(CONFIG.STORAGE_KEYS.VACANCIES, data.vacancies);
+                    if (data.reviews) localStorage.setItem('reviews', data.reviews);
+                    
+                    alert('✅ Данные импортированы!');
+                    
+                    // Обновляем все списки
+                    loadNewsList();
+                    loadVacanciesList();
+                    loadReviews();
+                    
+                    // Сбрасываем input
+                    input.value = '';
+                } catch (error) {
+                    alert('❌ Ошибка импорта: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+        }
 
         // ========== УДАЛЕНИЕ ==========
         function confirmDelete(type, id) {
