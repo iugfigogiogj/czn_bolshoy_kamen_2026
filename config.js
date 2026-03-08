@@ -1,21 +1,18 @@
 // ========== КОНФИГУРАЦИЯ САЙТА ==========
 
 const CONFIG = {
-    // API твоего бота на Railway (ЗАМЕНИ НА СВОЙ URL)
-    BOT_API_URL: 'https://твой-бот.railway.app',
+    // URL твоего сервера на Railway
+    API_URL: 'https://czbn-server-production-fa76.up.railway.app',
     
     // Настройки сайта
     SITE_NAME: 'ЦЗН г. Большой Камень',
     SITE_URL: window.location.origin,
     
-    // Пароль для админки (измени на свой)
+    // Пароль для админки
     ADMIN_PASSWORD: 'B0lsh0jK@men',
     
-    // Ключи для localStorage
+    // Ключи для localStorage (теперь только для авторизации)
     STORAGE_KEYS: {
-        NEWS: 'czbn_news',
-        AUTH: 'czbn_auth',
-        VACANCIES: 'czbn_vacancies',
-        SETTINGS: 'czbn_settings'
+        AUTH: 'czbn_auth'
     }
 };
