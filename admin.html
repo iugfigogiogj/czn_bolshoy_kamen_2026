@@ -1773,6 +1773,48 @@ window.addEventListener('storage', function(e) {
         loadReviewsFromStorage();
     }
 });
+                // ========== УДАЛЕНИЕ ==========
+        function confirmDelete(type, id) {
+            deleteType = type;
+            deleteId = id;
+            document.getElementById('confirmModal').style.display = 'flex';
+        }
+        
+        function deleteItem() {
+            if (!deleteId || !deleteType) return;
+            
+            if (deleteType === 'news') {
+                const news = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.NEWS) || '[]');
+                const filtered = news.filter(n => n.id != deleteId); // ← ЗАМЕНИЛ НА !=
+                localStorage.setItem(CONFIG.STORAGE_KEYS.NEWS, JSON.stringify(filtered));
+                loadNewsList();
+            } else if (deleteType === 'vacancy') {
+                const vacancies = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.VACANCIES) || '[]');
+                const filtered = vacancies.filter(v => v.id != deleteId); // ← ЗАМЕНИЛ НА !=
+                localStorage.setItem(CONFIG.STORAGE_KEYS.VACANCIES, JSON.stringify(filtered));
+                loadVacanciesList();
+            }
+            
+            document.getElementById('confirmModal').style.display = 'none';
+            deleteId = null;
+            deleteType = null;
+        }
+        
+        document.getElementById('confirmYes').onclick = deleteItem;
+        document.getElementById('confirmNo').onclick = function() {
+            document.getElementById('confirmModal').style.display = 'none';
+            deleteId = null;
+            deleteType = null;
+        };
+        
+        window.onclick = function(e) {
+            if (e.target === document.getElementById('confirmModal')) {
+                document.getElementById('confirmModal').style.display = 'none';
+                deleteId = null;
+                deleteType = null;
+            }
+        };
     </script>
 </body>
+
 </html>
