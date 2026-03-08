@@ -1,39 +1,42 @@
-// ========== ОТЗЫВЫ И ПРЕДЛОЖЕНИЯ ==========
+// ========== ОТЗЫВЫ ==========
 
 // Загрузка опубликованных отзывов
-function loadPublishedReviews() {
+async function loadPublishedReviews() {
     const reviewsList = document.getElementById('reviewsList');
     if (!reviewsList) return;
     
-    // Получаем отзывы из localStorage
-    const allReviews = JSON.parse(localStorage.getItem('reviews') || '[]');
-    const publishedReviews = allReviews.filter(r => r.status === 'approved');
-    
-    if (publishedReviews.length === 0) {
-        reviewsList.innerHTML = '<h3>Опубликованные отзывы</h3><p class="no-data">Пока нет отзывов</p>';
-        return;
-    }
-    
-    let html = '<h3>Опубликованные отзывы</h3>';
-    
-    publishedReviews.forEach(review => {
-        const stars = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
-        const categoryText = review.category === 'work-review' ? 'Отзыв о работе' : 'Предложение';
+    try {
+        const reviews = await API.getPublishedReviews();
         
-        html += `
-            <div class="review-item">
-                <div class="review-header">
-                    <div class="review-author">${escapeHtml(review.name)}</div>
-                    <div class="review-rating">${stars}</div>
-                    <div class="review-date">${review.date}</div>
+        if (reviews.length === 0) {
+            reviewsList.innerHTML = '<h3>Опубликованные отзывы</h3><p class="no-data">Пока нет отзывов</p>';
+            return;
+        }
+        
+        let html = '<h3>Опубликованные отзывы</h3>';
+        
+        reviews.forEach(review => {
+            const stars = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
+            const categoryText = review.category === 'work-review' ? 'Отзыв о работе' : 'Предложение';
+            
+            html += `
+                <div class="review-item">
+                    <div class="review-header">
+                        <div class="review-author">${escapeHtml(review.name)}</div>
+                        <div class="review-rating">${stars}</div>
+                        <div class="review-date">${review.date}</div>
+                    </div>
+                    <div class="review-category-badge ${review.category}">${categoryText}</div>
+                    <p class="review-text">${escapeHtml(review.text)}</p>
                 </div>
-                <div class="review-category-badge ${review.category}">${categoryText}</div>
-                <p class="review-text">${escapeHtml(review.text)}</p>
-            </div>
-        `;
-    });
-    
-    reviewsList.innerHTML = html;
+            `;
+        });
+        
+        reviewsList.innerHTML = html;
+    } catch (error) {
+        reviewsList.innerHTML = '<h3>Опубликованные отзывы</h3><p class="no-data">Ошибка загрузки отзывов</p>';
+        console.error('Ошибка загрузки отзывов:', error);
+    }
 }
 
 // Защита от XSS
@@ -43,7 +46,26 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// Показать статус (оставляем функцию, но не используем)
+// Отправка нового отзыва
+async function submitReview(formData) {
+    const statusDiv = document.getElementById('reviewFormStatus');
+    
+    try {
+        const result = await API.createReview(formData);
+        
+        if (result.success) {
+            showStatus(statusDiv, '✅ Спасибо! Отзыв отправлен на модерацию.', 'success');
+            return true;
+        } else {
+            throw new Error('Ошибка отправки');
+        }
+    } catch (error) {
+        console.error('Ошибка:', error);
+        showStatus(statusDiv, '❌ Ошибка при отправке', 'error');
+        return false;
+    }
+}
+
 function showStatus(element, message, type) {
     if (element) {
         element.textContent = message;
@@ -52,43 +74,7 @@ function showStatus(element, message, type) {
         
         setTimeout(() => {
             element.style.display = 'none';
-        }, 2000);
-    }
-}
-
-// Отправка нового отзыва (УБИРАЕМ showStatus)
-async function submitReview(formData) {
-    const statusDiv = document.getElementById('reviewFormStatus');
-    
-    try {
-        // Получаем существующие отзывы
-        const reviews = JSON.parse(localStorage.getItem('reviews') || '[]');
-        
-        // Добавляем новый отзыв с ID и статусом
-        const newReview = {
-            id: Date.now() + Math.random(),
-            name: formData.name,
-            category: formData.category,
-            rating: formData.rating,
-            text: formData.text,
-            date: formData.date,
-            status: 'pending'
-        };
-        
-        reviews.push(newReview);
-        localStorage.setItem('reviews', JSON.stringify(reviews));
-        
-        // УБИРАЕМ showStatus - НИКАКОГО СООБЩЕНИЯ
-        // Просто сохраняем и все
-        
-        // Отправляем уведомление в админку
-        localStorage.setItem('review_updated', Date.now().toString());
-        
-        return true;
-        
-    } catch (error) {
-        console.error('Ошибка:', error);
-        return false;
+        }, 3000);
     }
 }
 
@@ -133,13 +119,6 @@ function initReviewForm() {
         submitBtn.textContent = 'Отправить';
     });
 }
-
-// Слушаем изменения в localStorage (для синхронизации с админкой)
-window.addEventListener('storage', function(e) {
-    if (e.key === 'reviews' || e.key === 'review_updated') {
-        loadPublishedReviews();
-    }
-});
 
 // Загружаем отзывы при загрузке страницы
 document.addEventListener('DOMContentLoaded', () => {
