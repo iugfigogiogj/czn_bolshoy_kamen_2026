@@ -1,6 +1,5 @@
 // ========== НОВОСТИ ==========
 
-// Загружаем и показываем новости
 async function loadNews() {
     const newsGrid = document.getElementById('newsGrid');
     if (!newsGrid) return;
@@ -13,7 +12,6 @@ async function loadNews() {
             return;
         }
         
-        // Сортируем по дате (свежие сверху)
         news.sort((a, b) => {
             const [d1, m1, y1] = a.date.split('.').map(Number);
             const [d2, m2, y2] = b.date.split('.').map(Number);
@@ -53,14 +51,12 @@ async function loadNews() {
     }
 }
 
-// ========== МОДАЛЬНОЕ ОКНО ==========
 async function openNews(newsId) {
     try {
         const news = await API.getNews();
         const item = news.find(n => n.id == newsId);
         if (!item) return;
         
-        // Удаляем предыдущее модальное окно если есть
         const existingModal = document.querySelector('.news-modal');
         if (existingModal) existingModal.remove();
         
@@ -96,7 +92,6 @@ async function openNews(newsId) {
         
         document.body.appendChild(modal);
         
-        // Закрытие
         modal.querySelector('.news-modal-close').onclick = function(e) {
             e.preventDefault();
             e.stopPropagation();
@@ -117,5 +112,4 @@ async function openNews(newsId) {
     }
 }
 
-// Загружаем новости при загрузке страницы
 document.addEventListener('DOMContentLoaded', loadNews);
