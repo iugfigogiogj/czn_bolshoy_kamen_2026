@@ -1,6 +1,5 @@
 // ========== ОТЗЫВЫ ==========
 
-// Загрузка опубликованных отзывов
 async function loadPublishedReviews() {
     const reviewsList = document.getElementById('reviewsList');
     if (!reviewsList) return;
@@ -39,14 +38,12 @@ async function loadPublishedReviews() {
     }
 }
 
-// Защита от XSS
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
 }
 
-// Отправка нового отзыва
 async function submitReview(formData) {
     const statusDiv = document.getElementById('reviewFormStatus');
     
@@ -78,7 +75,6 @@ function showStatus(element, message, type) {
     }
 }
 
-// Инициализация формы отзывов
 function initReviewForm() {
     const form = document.getElementById('reviewForm');
     if (!form) return;
@@ -120,7 +116,6 @@ function initReviewForm() {
     });
 }
 
-// Загружаем отзывы при загрузке страницы
 document.addEventListener('DOMContentLoaded', () => {
     loadPublishedReviews();
     initReviewForm();
