@@ -1,4 +1,67 @@
-// ========== АДМИН-ПАНЕЛЬ - РАБОТА С СЕРВЕРОМ ==========
+// ========== АДМИН-ПАНЕЛЬ ==========
+
+let currentNewsId = null;
+let currentVacancyId = null;
+let newsTags = [];
+let newsImageData = null;
+let vacancyDetails = ['', '', ''];
+let selectedBadge = '';
+let deleteId = null;
+let deleteType = null;
+
+// Для отзывов
+let allReviews = [];
+let currentFilter = 'pending';
+
+// ========== АВТОРИЗАЦИЯ ==========
+if (localStorage.getItem(CONFIG.STORAGE_KEYS.AUTH) === 'true') {
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('adminPanel').style.display = 'block';
+    loadNewsList();
+    loadVacanciesList();
+    loadReviews();
+    renderVacancyDetails();
+}
+
+function login() {
+    const pass = document.getElementById('password').value;
+    if (pass === CONFIG.ADMIN_PASSWORD) {
+        localStorage.setItem(CONFIG.STORAGE_KEYS.AUTH, 'true');
+        document.getElementById('loginForm').style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'block';
+        loadNewsList();
+        loadVacanciesList();
+        loadReviews();
+        renderVacancyDetails();
+        document.getElementById('loginError').style.display = 'none';
+    } else {
+        document.getElementById('loginError').style.display = 'block';
+    }
+}
+
+function logout() {
+    localStorage.removeItem(CONFIG.STORAGE_KEYS.AUTH);
+    location.reload();
+}
+
+// ========== ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК ==========
+function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    
+    if (tab === 'news') {
+        document.querySelector('.tab-btn.news-tab').classList.add('active');
+        document.getElementById('tab-news').classList.add('active');
+    } else if (tab === 'vacancies') {
+        document.querySelector('.tab-btn.vacancies-tab').classList.add('active');
+        document.getElementById('tab-vacancies').classList.add('active');
+        renderVacancyDetails();
+    } else if (tab === 'reviews') {
+        document.querySelector('.tab-btn.reviews-tab').classList.add('active');
+        document.getElementById('tab-reviews').classList.add('active');
+        renderReviews();
+    }
+}
 
 // ========== НОВОСТИ ==========
 async function loadNewsList() {
@@ -49,41 +112,47 @@ async function loadNewsList() {
     }
 }
 
-async function saveNews() {
-    const newsData = {
-        title: document.getElementById('newsTitle').value,
-        date: document.getElementById('newsDate').value,
-        image: document.getElementById('newsImage').value || '',
-        preview: document.getElementById('newsPreview').value,
-        details: document.getElementById('newsDetails').value || '',
-        content: document.getElementById('newsContent').value || '',
-        tags: newsTags
-    };
-    
+async function editNews(id) {
     try {
-        if (currentNewsId) {
-            await API.updateNews(currentNewsId, newsData);
-            alert('Новость обновлена!');
-        } else {
-            await API.createNews(newsData);
-            alert('Новость опубликована!');
+        const news = await API.getNews();
+        const item = news.find(n => n.id == id);
+        if (!item) return;
+        
+        currentNewsId = id;
+        newsTags = item.tags ? JSON.parse(item.tags) : [];
+        newsImageData = item.image || null;
+        
+        document.getElementById('newsFormTitle').innerHTML = '✏️ Редактировать новость';
+        document.getElementById('newsSubmitBtn').textContent = 'Обновить';
+        document.getElementById('newsTitle').value = item.title;
+        document.getElementById('newsDate').value = item.date;
+        document.getElementById('newsPreview').value = item.preview;
+        document.getElementById('newsDetails').value = item.details || '';
+        document.getElementById('newsContent').value = item.content || '';
+        
+        if (item.image) {
+            document.getElementById('newsImagePreview').src = item.image;
+            document.getElementById('newsImagePreviewContainer').classList.add('show');
+            document.getElementById('newsImageSize').textContent = item.image.startsWith('data:') ? 'Загруженное фото' : 'URL фото';
         }
-        resetNewsForm();
-        loadNewsList();
+        
+        renderNewsTags();
+        switchTab('news');
     } catch (error) {
-        alert('Ошибка сохранения новости');
-        console.error(error);
+        console.error('Ошибка загрузки новости:', error);
     }
 }
 
-async function deleteNews(newsId) {
-    try {
-        await API.deleteNews(newsId);
-        loadNewsList();
-    } catch (error) {
-        alert('Ошибка удаления новости');
-        console.error(error);
-    }
+function resetNewsForm() {
+    currentNewsId = null;
+    newsTags = [];
+    newsImageData = null;
+    document.getElementById('newsFormTitle').innerHTML = '➕ Добавить новость';
+    document.getElementById('newsSubmitBtn').textContent = 'Опубликовать';
+    document.getElementById('newsForm').reset();
+    document.getElementById('newsImagePreviewContainer').classList.remove('show');
+    document.getElementById('newsFileInput').value = '';
+    renderNewsTags();
 }
 
 // ========== ВАКАНСИИ ==========
@@ -138,7 +207,245 @@ async function loadVacanciesList() {
     }
 }
 
-async function saveVacancy() {
+async function editVacancy(id) {
+    try {
+        const vacancies = await API.getVacancies();
+        const item = vacancies.find(v => v.id == id);
+        if (!item) return;
+        
+        currentVacancyId = id;
+        vacancyDetails = item.details ? JSON.parse(item.details) : [''];
+        selectedBadge = item.badge || '';
+        
+        document.getElementById('vacancyFormTitle').innerHTML = '✏️ Редактировать вакансию';
+        document.getElementById('vacancySubmitBtn').textContent = 'Обновить';
+        document.getElementById('vacancyTitle').value = item.title;
+        document.getElementById('vacancyCompany').value = item.company;
+        document.getElementById('vacancySalary').value = item.salary;
+        document.getElementById('vacancyLink').value = item.apply_link || '';
+        
+        document.querySelectorAll('.badge-option').forEach(opt => {
+            opt.classList.remove('selected');
+            if (opt.dataset.value === item.badge) {
+                opt.classList.add('selected');
+            }
+        });
+        
+        renderVacancyDetails();
+        switchTab('vacancies');
+    } catch (error) {
+        console.error('Ошибка загрузки вакансии:', error);
+    }
+}
+
+function resetVacancyForm() {
+    currentVacancyId = null;
+    vacancyDetails = ['', '', ''];
+    selectedBadge = '';
+    
+    document.getElementById('vacancyFormTitle').innerHTML = '➕ Добавить вакансию';
+    document.getElementById('vacancySubmitBtn').textContent = 'Опубликовать';
+    document.getElementById('vacancyForm').reset();
+    document.getElementById('vacancyLink').value = '';
+    
+    document.querySelectorAll('.badge-option').forEach(opt => {
+        opt.classList.remove('selected');
+        if (opt.dataset.value === '') {
+            opt.classList.add('selected');
+        }
+    });
+    
+    renderVacancyDetails();
+}
+
+// ========== ОТЗЫВЫ ==========
+async function loadReviews() {
+    try {
+        const pending = await API.getPendingReviews();
+        allReviews = pending;
+        updateReviewStats();
+        renderReviews();
+    } catch (error) {
+        console.error('Ошибка загрузки отзывов:', error);
+    }
+}
+
+function updateReviewStats() {
+    const pendingEl = document.getElementById('pendingCount');
+    const approvedEl = document.getElementById('approvedCount');
+    
+    if (pendingEl) pendingEl.textContent = allReviews.length;
+    if (approvedEl) approvedEl.textContent = 0;
+}
+
+function renderReviews() {
+    const grid = document.getElementById('reviewsGrid');
+    if (!grid) return;
+    
+    if (allReviews.length === 0) {
+        grid.innerHTML = '<div class="no-data">📭 Нет отзывов в этой категории</div>';
+        return;
+    }
+    
+    let html = '';
+    allReviews.forEach((review, index) => {
+        const reviewId = review.id;
+        const stars = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
+        const categoryText = review.category === 'work-review' ? 'Отзыв о работе' : 'Предложение';
+        const categoryClass = review.category === 'work-review' ? 'work-review' : 'suggestion';
+        
+        html += `
+            <div class="review-card pending" data-id="${reviewId}">
+                <div class="review-header">
+                    <span class="review-author">${escapeHtml(review.name)}</span>
+                    <span class="review-rating">${stars}</span>
+                </div>
+                <span class="review-category ${categoryClass}">${categoryText}</span>
+                <div class="review-date">📅 ${review.date || 'Дата не указана'}</div>
+                <div class="review-text">${escapeHtml(review.text)}</div>
+                <div class="review-actions">
+                    <button class="review-view" onclick="viewReview(${reviewId})">👁️ Просмотр</button>
+                    <button class="review-approve" onclick="approveReview(${reviewId})">✅ Опубликовать</button>
+                    <button class="review-reject" onclick="rejectReview(${reviewId})">❌ Отклонить</button>
+                </div>
+            </div>
+        `;
+    });
+    
+    grid.innerHTML = html;
+}
+
+async function approveReview(id) {
+    try {
+        await API.approveReview(id);
+        loadReviews();
+    } catch (error) {
+        alert('Ошибка при одобрении отзыва');
+        console.error(error);
+    }
+}
+
+async function rejectReview(id) {
+    if (!confirm('Вы уверены, что хотите отклонить этот отзыв?')) return;
+    
+    try {
+        await API.rejectReview(id);
+        loadReviews();
+    } catch (error) {
+        alert('Ошибка при отклонении отзыва');
+        console.error(error);
+    }
+}
+
+// ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
+function renderNewsTags() {
+    const container = document.getElementById('newsTagsContainer');
+    if (newsTags.length === 0) {
+        container.innerHTML = '<div style="color:#999;">Теги не добавлены</div>';
+        return;
+    }
+    
+    let html = '';
+    newsTags.forEach((tag, index) => {
+        html += `
+            <div class="tag">
+                #${tag}
+                <span class="tag-remove" onclick="removeNewsTag(${index})">×</span>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+function addNewsTag() {
+    const input = document.getElementById('newsTagInput');
+    const tag = input.value.trim().toLowerCase().replace(/#/g, '');
+    
+    if (tag && !newsTags.includes(tag)) {
+        newsTags.push(tag);
+        renderNewsTags();
+        input.value = '';
+    }
+}
+
+function removeNewsTag(index) {
+    newsTags.splice(index, 1);
+    renderNewsTags();
+}
+
+function renderVacancyDetails() {
+    const container = document.getElementById('detailsList');
+    if (!container) return;
+    
+    let html = '';
+    vacancyDetails.forEach((detail, index) => {
+        html += `
+            <div class="detail-item">
+                <input type="text" value="${detail}" placeholder="Например: График: 2/2" oninput="updateVacancyDetail(${index}, this.value)">
+                <button class="remove-detail" onclick="removeVacancyDetail(${index})" ${vacancyDetails.length <= 1 ? 'style="display:none;"' : ''}>×</button>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+function addVacancyDetail() {
+    vacancyDetails.push('');
+    renderVacancyDetails();
+}
+
+function removeVacancyDetail(index) {
+    if (vacancyDetails.length > 1) {
+        vacancyDetails.splice(index, 1);
+        renderVacancyDetails();
+    }
+}
+
+function updateVacancyDetail(index, value) {
+    vacancyDetails[index] = value;
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// ========== СОХРАНЕНИЕ ==========
+document.getElementById('newsForm')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const newsData = {
+        title: document.getElementById('newsTitle').value,
+        date: document.getElementById('newsDate').value,
+        image: document.getElementById('newsImage').value || '',
+        preview: document.getElementById('newsPreview').value,
+        details: document.getElementById('newsDetails').value || '',
+        content: document.getElementById('newsContent').value || '',
+        tags: newsTags
+    };
+    
+    try {
+        if (currentNewsId) {
+            await API.updateNews(currentNewsId, newsData);
+            alert('Новость обновлена!');
+        } else {
+            await API.createNews(newsData);
+            alert('Новость опубликована!');
+        }
+        resetNewsForm();
+        loadNewsList();
+    } catch (error) {
+        alert('Ошибка сохранения новости');
+        console.error(error);
+    }
+});
+
+document.getElementById('vacancyForm')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
     const details = vacancyDetails.filter(d => d.trim() !== '');
     
     const vacancyData = {
@@ -164,48 +471,47 @@ async function saveVacancy() {
         alert('Ошибка сохранения вакансии');
         console.error(error);
     }
+});
+
+// ========== УДАЛЕНИЕ ==========
+function confirmDelete(type, id) {
+    deleteType = type;
+    deleteId = id;
+    document.getElementById('confirmModal').style.display = 'flex';
 }
 
-async function deleteVacancy(vacancyId) {
-    try {
-        await API.deleteVacancy(vacancyId);
-        loadVacanciesList();
-    } catch (error) {
-        alert('Ошибка удаления вакансии');
-        console.error(error);
-    }
-}
-
-// ========== ОТЗЫВЫ ==========
-async function loadReviews() {
-    try {
-        const pending = await API.getPendingReviews();
-        allReviews = pending;
-        renderReviews();
-        updateReviewStats();
-    } catch (error) {
-        console.error('Ошибка загрузки отзывов:', error);
-    }
-}
-
-async function approveReview(id) {
-    try {
-        await API.approveReview(id);
-        loadReviews();
-    } catch (error) {
-        alert('Ошибка при одобрении отзыва');
-        console.error(error);
-    }
-}
-
-async function rejectReview(id) {
-    if (!confirm('Вы уверены, что хотите отклонить этот отзыв?')) return;
+async function deleteItem() {
+    if (!deleteId || !deleteType) return;
     
     try {
-        await API.rejectReview(id);
-        loadReviews();
+        if (deleteType === 'news') {
+            await API.deleteNews(deleteId);
+            loadNewsList();
+        } else if (deleteType === 'vacancy') {
+            await API.deleteVacancy(deleteId);
+            loadVacanciesList();
+        }
     } catch (error) {
-        alert('Ошибка при отклонении отзыва');
+        alert('Ошибка удаления');
         console.error(error);
     }
+    
+    document.getElementById('confirmModal').style.display = 'none';
+    deleteId = null;
+    deleteType = null;
 }
+
+document.getElementById('confirmYes').onclick = deleteItem;
+document.getElementById('confirmNo').onclick = function() {
+    document.getElementById('confirmModal').style.display = 'none';
+    deleteId = null;
+    deleteType = null;
+};
+
+window.onclick = function(e) {
+    if (e.target === document.getElementById('confirmModal')) {
+        document.getElementById('confirmModal').style.display = 'none';
+        deleteId = null;
+        deleteType = null;
+    }
+};
