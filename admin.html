@@ -1773,7 +1773,8 @@ window.addEventListener('storage', function(e) {
         loadReviewsFromStorage();
     }
 });
-                // ========== УДАЛЕНИЕ ==========
+
+        // ========== УДАЛЕНИЕ ==========
         function confirmDelete(type, id) {
             deleteType = type;
             deleteId = id;
@@ -1785,12 +1786,12 @@ window.addEventListener('storage', function(e) {
             
             if (deleteType === 'news') {
                 const news = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.NEWS) || '[]');
-                const filtered = news.filter(n => n.id != deleteId); // ← ЗАМЕНИЛ НА !=
+                const filtered = news.filter(n => n.id != deleteId);
                 localStorage.setItem(CONFIG.STORAGE_KEYS.NEWS, JSON.stringify(filtered));
                 loadNewsList();
             } else if (deleteType === 'vacancy') {
                 const vacancies = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.VACANCIES) || '[]');
-                const filtered = vacancies.filter(v => v.id != deleteId); // ← ЗАМЕНИЛ НА !=
+                const filtered = vacancies.filter(v => v.id != deleteId);
                 localStorage.setItem(CONFIG.STORAGE_KEYS.VACANCIES, JSON.stringify(filtered));
                 loadVacanciesList();
             }
@@ -1816,5 +1817,4 @@ window.addEventListener('storage', function(e) {
         };
     </script>
 </body>
-
 </html>
