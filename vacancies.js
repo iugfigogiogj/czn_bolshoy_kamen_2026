@@ -66,8 +66,7 @@ async function loadVacancies() {
 
 async function applyForVacancy(vacancyId) {
     try {
-        const vacancies = await API.getVacancies();
-        const vacancy = vacancies.find(v => v.id == vacancyId);
+        const vacancy = await API.getVacancyById(vacancyId);
         
         if (vacancy) {
             if (vacancy.apply_link && vacancy.apply_link.trim() !== '') {
