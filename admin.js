@@ -1,37 +1,5 @@
 // ========== АДМИН-ПАНЕЛЬ ==========
 
-// ========== АВТОРИЗАЦИЯ ==========
-function login() {
-    const pass = document.getElementById('password').value;
-    if (pass === CONFIG.ADMIN_PASSWORD) {
-        localStorage.setItem(CONFIG.STORAGE_KEYS.AUTH, 'true');
-        document.getElementById('loginForm').style.display = 'none';
-        document.getElementById('adminPanel').style.display = 'block';
-        loadNewsList();
-        loadVacanciesList();
-        loadReviews();
-        renderVacancyDetails();
-        document.getElementById('loginError').style.display = 'none';
-    } else {
-        document.getElementById('loginError').style.display = 'block';
-    }
-}
-
-function logout() {
-    localStorage.removeItem(CONFIG.STORAGE_KEYS.AUTH);
-    location.reload();
-}
-
-// Проверка авторизации при загрузке
-if (localStorage.getItem(CONFIG.STORAGE_KEYS.AUTH) === 'true') {
-    document.getElementById('loginForm').style.display = 'none';
-    document.getElementById('adminPanel').style.display = 'block';
-    loadNewsList();
-    loadVacanciesList();
-    loadReviews();
-    renderVacancyDetails();
-}
-
 let currentNewsId = null;
 let currentVacancyId = null;
 let newsTags = [];
@@ -46,18 +14,14 @@ let allReviews = [];
 let currentFilter = 'pending';
 
 // ========== АВТОРИЗАЦИЯ ==========
-if (localStorage.getItem(CONFIG.STORAGE_KEYS.AUTH) === 'true') {
-    document.getElementById('loginForm').style.display = 'none';
-    document.getElementById('adminPanel').style.display = 'block';
-    loadNewsList();
-    loadVacanciesList();
-    loadReviews();
-    renderVacancyDetails();
-}
-
 function login() {
+    console.log('Функция login вызвана');
     const pass = document.getElementById('password').value;
+    console.log('Введенный пароль:', pass);
+    console.log('Правильный пароль:', CONFIG.ADMIN_PASSWORD);
+    
     if (pass === CONFIG.ADMIN_PASSWORD) {
+        console.log('Пароль верный');
         localStorage.setItem(CONFIG.STORAGE_KEYS.AUTH, 'true');
         document.getElementById('loginForm').style.display = 'none';
         document.getElementById('adminPanel').style.display = 'block';
@@ -67,6 +31,7 @@ function login() {
         renderVacancyDetails();
         document.getElementById('loginError').style.display = 'none';
     } else {
+        console.log('Пароль неверный');
         document.getElementById('loginError').style.display = 'block';
     }
 }
@@ -75,6 +40,24 @@ function logout() {
     localStorage.removeItem(CONFIG.STORAGE_KEYS.AUTH);
     location.reload();
 }
+
+// Проверка авторизации при загрузке
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Admin.js загружен');
+    console.log('CONFIG:', CONFIG);
+    
+    if (localStorage.getItem(CONFIG.STORAGE_KEYS.AUTH) === 'true') {
+        console.log('Пользователь авторизован');
+        document.getElementById('loginForm').style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'block';
+        loadNewsList();
+        loadVacanciesList();
+        loadReviews();
+        renderVacancyDetails();
+    } else {
+        console.log('Пользователь не авторизован');
+    }
+});
 
 // ========== ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК ==========
 function switchTab(tab) {
