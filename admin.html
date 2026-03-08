@@ -1211,8 +1211,22 @@
             </div>
         </div>
     </div>
+    <script>
+function login() {
+    const pass = document.getElementById('password').value;
+    if (pass === CONFIG.ADMIN_PASSWORD) {
+        localStorage.setItem(CONFIG.STORAGE_KEYS.AUTH, 'true');
+        document.getElementById('loginForm').style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'block';
+        document.getElementById('loginError').style.display = 'none';
+    } else {
+        document.getElementById('loginError').style.display = 'block';
+    }
+}
+</script>
 </body>
 </html>
+
 
 
 
