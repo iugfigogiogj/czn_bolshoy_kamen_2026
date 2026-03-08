@@ -1,0 +1,1904 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ЦЗН г. Большой Камень</title>
+    
+    <!-- Подключение скриптов -->
+    <script src="config.js"></script>
+    <script src="news.js" defer></script>
+    <script src="vacancies.js" defer></script>
+    <script src="search.js" defer></script>
+    <script src="reviews.js" defer></script>
+    <!-- EmailJS -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script src="emailjs.js" defer></script>
+    
+    <style>
+        /* Базовые стили и сброс */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-blue: #0066CC;
+            --dark-blue: #004999;
+            --light-blue: #E6F2FF;
+            --red-accent: #DC3545;
+            --white: #FFFFFF;
+            --black: #000000;
+            --text-gray: #333333;
+            --light-gray: #F5F5F5;
+            --border-gray: #DDDDDD;
+            --success-green: #28A745;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-gray);
+            background-color: var(--white);
+            position: relative;
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('https://tzaropera.ru/images/news/2025/20250627_1.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.15;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Шапка сайта */
+        .header {
+            background-color: var(--white);
+            color: var(--text-gray);
+            padding: 15px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+        }
+
+        .logo-text h1 {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 3px;
+            color: var(--dark-blue);
+        }
+
+        .subtitle {
+            font-size: 13px;
+            opacity: 0.8;
+            color: var(--text-gray);
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            flex-direction: column;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1001;
+        }
+
+        .mobile-menu-btn span {
+            width: 25px;
+            height: 3px;
+            background-color: var(--dark-blue);
+            margin: 3px 0;
+            transition: 0.3s;
+            border-radius: 2px;
+        }
+
+        .mobile-menu-btn.active span:nth-child(1) {
+            transform: rotate(-45deg) translate(-5px, 6px);
+        }
+
+        .mobile-menu-btn.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .mobile-menu-btn.active span:nth-child(3) {
+            transform: rotate(45deg) translate(-5px, -6px);
+        }
+
+        /* Поисковая строка */
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .search-bar input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 2px solid var(--border-gray);
+            border-radius: 4px;
+            font-size: 14px;
+            background-color: var(--white);
+            transition: border-color 0.3s;
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+        }
+
+        .search-bar button {
+            padding: 10px 20px;
+            background-color: var(--red-accent);
+            color: var(--white);
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            white-space: nowrap;
+            font-weight: 600;
+        }
+
+        .search-bar button:hover {
+            background-color: #c82333;
+        }
+
+        /* Навигация */
+        .nav {
+            background-color: var(--dark-blue);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-list {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .nav-list li {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .nav-link {
+            display: block;
+            padding: 12px 8px;
+            color: var(--white);
+            text-decoration: none;
+            text-align: center;
+            transition: background-color 0.3s;
+            font-size: 13px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .nav-link:hover {
+            background-color: var(--primary-blue);
+        }
+
+        .nav-link.active {
+            background-color: var(--red-accent);
+        }
+
+        /* Основной контент */
+        .main {
+            min-height: calc(100vh - 350px);
+            padding: 30px 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .page {
+            display: none;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .page.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .page-title {
+            font-size: 28px;
+            color: var(--dark-blue);
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--primary-blue);
+        }
+
+        .page-description {
+            font-size: 16px;
+            color: var(--text-gray);
+            margin-bottom: 25px;
+        }
+
+        /* ========== СТИЛИ ДЛЯ НОВОСТЕЙ ========== */
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 25px;
+        }
+
+        .news-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .news-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+
+        .news-image-container {
+            width: 100%;
+            height: 220px;
+            overflow: hidden;
+            background: #f5f5f5;
+        }
+
+        .news-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+            display: block;
+        }
+
+        .news-card:hover .news-image {
+            transform: scale(1.05);
+        }
+
+        .news-content {
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .news-date {
+            color: #0066CC;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .news-content h3 {
+            color: #004999;
+            font-size: 20px;
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+
+        .news-content p {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            flex: 1;
+        }
+
+        .news-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .news-tag {
+            background: #E6F2FF;
+            color: #004999;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+
+        .news-link {
+            color: #0066CC;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            display: inline-block;
+            margin-top: auto;
+        }
+
+        .news-link:hover {
+            color: #DC3545;
+        }
+
+        /* Модальное окно новостей */
+        .news-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 10000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+        }
+
+        .news-modal-content {
+            max-width: 650px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            background: white;
+            border-radius: 16px;
+            position: relative;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            animation: modalShow 0.2s ease;
+        }
+
+        @keyframes modalShow {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* Крестик */
+        .news-modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            font-size: 28px;
+            font-weight: 400;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            cursor: pointer;
+            backdrop-filter: blur(2px);
+            transition: all 0.2s;
+            z-index: 10;
+            line-height: 1;
+            text-align: center;
+            padding: 0;
+            margin: 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .news-modal-close:hover {
+            background: rgba(220, 53, 69, 0.9);
+            transform: scale(1.05);
+        }
+
+        .news-modal-close::before {
+            content: "×";
+            display: block;
+            line-height: 1;
+        }
+
+        .news-modal-image-container {
+            width: 100%;
+            height: 280px;
+            overflow: hidden;
+            background: #f5f5f5;
+        }
+
+        .news-modal-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .news-modal-body {
+            padding: 30px;
+        }
+
+        .news-modal-date {
+            color: #0066CC;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .news-modal-title {
+            color: #004999;
+            font-size: 26px;
+            margin-bottom: 15px;
+            line-height: 1.3;
+        }
+
+        .news-modal-tags {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .news-modal-tag {
+            background: #E6F2FF;
+            color: #004999;
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 14px;
+        }
+
+        .news-modal-preview {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #333;
+            border-left: 4px solid #0066CC;
+        }
+
+        .news-modal-details {
+            background: #fff3cd;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 15px;
+            line-height: 1.6;
+            color: #856404;
+        }
+
+        .news-modal-full {
+            font-size: 16px;
+            line-height: 1.7;
+            color: #333;
+        }
+
+        .news-modal-full h1,
+        .news-modal-full h2,
+        .news-modal-full h3 {
+            color: #004999;
+            margin: 25px 0 15px;
+        }
+
+        .news-modal-full h1 { font-size: 24px; }
+        .news-modal-full h2 { font-size: 22px; }
+        .news-modal-full h3 { font-size: 20px; }
+
+        .news-modal-full p {
+            margin-bottom: 15px;
+        }
+
+        .news-modal-full ul,
+        .news-modal-full ol {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+
+        .news-modal-full li {
+            margin-bottom: 8px;
+        }
+
+       /* ========== СТИЛИ ДЛЯ ВАКАНСИЙ ========== */
+.vacancies-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 25px;
+}
+
+.vacancy-card {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    margin: 0;
+    transition: box-shadow 0.2s ease;
+}
+
+.vacancy-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    border-color: #e0e0e0; /* Убираем синюю обводку */
+}
+
+.vacancy-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    background: white;
+    border: 1px solid;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.vacancy-badge.badge-hot {
+    border-color: #E31B23;
+    color: #E31B23;
+    background: white;
+}
+
+.vacancy-badge.badge-attractive {
+    border-color: #00A650;
+    color: #00A650;
+    background: white;
+}
+
+.vacancy-badge.badge-flexible {
+    border-color: #0066B3;
+    color: #0066B3;
+    background: white;
+}
+
+.vacancy-badge.badge-housing {
+    border-color: #FF6B35;
+    color: #FF6B35;
+    background: white;
+}
+
+.vacancy-badge.badge-parttime {
+    border-color: #6C757D;
+    color: #6C757D;
+    background: white;
+}
+
+.vacancy-card h3 {
+    color: #003A70;
+    font-size: 20px;
+    margin: 0 0 8px 0;
+    padding-right: 80px;
+    line-height: 1.4;
+}
+
+.vacancy-company {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.vacancy-salary {
+    color: #00A650;
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.vacancy-details {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px 0;
+    flex: 1;
+}
+
+.vacancy-details li {
+    color: #333;
+    margin-bottom: 8px;
+    padding-left: 24px;
+    position: relative;
+    font-size: 14px;
+}
+
+.vacancy-details li:before {
+    content: "✓";
+    color: #0066B3;
+    position: absolute;
+    left: 0;
+    font-weight: bold;
+}
+
+/* ИСПРАВЛЕННАЯ КНОПКА */
+.vacancy-btn {
+    width: 100%;
+    padding: 12px;
+    background-color: #0066B3;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    margin-top: auto;
+    position: relative;
+    z-index: 5;
+}
+
+.vacancy-btn:hover {
+    background-color: #003A70;
+}
+
+        /* СХЕМА для работодателей */
+        .scheme-container {
+            margin-top: 25px;
+        }
+
+        .scheme-block {
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid var(--primary-blue);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .scheme-title {
+            color: var(--dark-blue);
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-align: center;
+            background-color: var(--light-blue);
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        .scheme-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        .scheme-item {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid var(--border-gray);
+            border-radius: 6px;
+            padding: 15px;
+        }
+
+        .scheme-item h4 {
+            color: var(--dark-blue);
+            font-size: 16px;
+            margin-bottom: 8px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid var(--primary-blue);
+        }
+
+        .scheme-item ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .scheme-item li {
+            margin-bottom: 6px;
+            padding-left: 20px;
+            position: relative;
+            font-size: 14px;
+        }
+
+        .scheme-item li:before {
+            content: "•";
+            color: var(--primary-blue);
+            position: absolute;
+            left: 8px;
+            font-weight: bold;
+        }
+
+        /* СХЕМА для ищущих работу */
+        .steps-scheme {
+            margin-top: 25px;
+        }
+
+        .step-card {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid var(--border-gray);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            transition: transform 0.3s;
+        }
+
+        .step-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .step-icon {
+            width: 50px;
+            height: 50px;
+            background-color: var(--primary-blue);
+            color: var(--white);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-content h4 {
+            color: var(--dark-blue);
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .step-content p {
+            color: var(--text-gray);
+            line-height: 1.5;
+            font-size: 14px;
+        }
+
+        /* Контакты */
+        .contacts-simple {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-top: 25px;
+        }
+
+        .contact-info {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid var(--border-gray);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .contact-info h3 {
+            color: var(--dark-blue);
+            font-size: 20px;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--primary-blue);
+        }
+
+        .contact-item {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .contact-icon-small {
+            color: var(--primary-blue);
+            font-size: 18px;
+            width: 24px;
+            flex-shrink: 0;
+        }
+
+        .contact-text {
+            flex: 1;
+        }
+
+        .contact-text strong {
+            color: var(--dark-blue);
+            font-size: 14px;
+        }
+
+        .contact-text p {
+            color: var(--text-gray);
+            font-size: 14px;
+            margin-top: 2px;
+        }
+
+        .contact-text a {
+            color: var(--primary-blue);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .contact-text a:hover {
+            color: var(--red-accent);
+            text-decoration: underline;
+        }
+
+        /* Карта */
+        .map-wrapper {
+            margin-top: 25px;
+        }
+
+        .map-container {
+            width: 100%;
+            height: 400px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .map-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Формы */
+        .appeal-form,
+        .review-form {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 25px;
+            border-radius: 8px;
+            margin-top: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            color: var(--dark-blue);
+            font-weight: 600;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+
+        .required {
+            color: var(--red-accent);
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="email"],
+        .form-group input[type="tel"],
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-gray);
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+            background-color: rgba(255, 255, 255, 0.95);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            margin-top: 3px;
+            width: 16px;
+            height: 16px;
+        }
+
+        .submit-btn {
+            padding: 12px 30px;
+            background-color: var(--primary-blue);
+            color: var(--white);
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .submit-btn:hover {
+            background-color: var(--dark-blue);
+        }
+
+        /* Статус отправки формы */
+        .form-status {
+            margin-top: 15px;
+            padding: 12px 15px;
+            border-radius: 4px;
+            display: none;
+            font-size: 14px;
+        }
+
+        .form-status.success {
+            display: block;
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .form-status.error {
+            display: block;
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .form-status.info {
+            display: block;
+            background-color: #cce5ff;
+            color: #004085;
+            border: 1px solid #b8daff;
+        }
+
+        /* ИСПРАВЛЕННЫЙ info-note - без черных точек */
+        .info-note {
+            background: rgba(230, 242, 255, 0.95);
+            border-left: 3px solid var(--primary-blue);
+            padding: 15px;
+            margin-top: 25px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .info-note p {
+            margin-bottom: 8px;
+        }
+        
+        .info-note ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .info-note li {
+            margin-bottom: 6px;
+            padding-left: 0;
+            position: relative;
+        }
+
+        /* Отзывы */
+        .review-form-block {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .review-form-block h3 {
+            color: var(--dark-blue);
+            font-size: 22px;
+            margin-bottom: 8px;
+        }
+
+        .form-note {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        /* Рейтинг */
+        .rating-input {
+            display: flex;
+            flex-direction: row-reverse;
+            justify-content: flex-end;
+            gap: 4px;
+        }
+
+        .rating-input input[type="radio"] {
+            display: none;
+        }
+
+        .rating-input label {
+            font-size: 28px;
+            color: var(--border-gray);
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .rating-input input[type="radio"]:checked ~ label,
+        .rating-input label:hover,
+        .rating-input label:hover ~ label {
+            color: #FFD700;
+        }
+
+        /* Список отзывов */
+        .reviews-list {
+            margin-top: 30px;
+        }
+
+        .reviews-list h3 {
+            color: var(--dark-blue);
+            font-size: 22px;
+            margin-bottom: 20px;
+        }
+
+        .review-item {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid var(--border-gray);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .review-header {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .review-author {
+            font-weight: 600;
+            color: var(--dark-blue);
+            font-size: 15px;
+        }
+
+        .review-rating {
+            color: #FFD700;
+            font-size: 16px;
+        }
+
+        .review-date {
+            color: #999;
+            font-size: 13px;
+            margin-left: auto;
+        }
+
+        .review-category-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .review-category-badge.work-review {
+            background-color: var(--light-blue);
+            color: var(--dark-blue);
+        }
+
+        .review-category-badge.suggestion {
+            background-color: #FFF3CD;
+            color: #856404;
+        }
+
+        .review-text {
+            color: var(--text-gray);
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        /* Подвал */
+        .footer {
+            background-color: rgba(0, 73, 153, 0.95);
+            color: var(--white);
+            padding: 30px 0 15px;
+            margin-top: 40px;
+            position: relative;
+            z-index: 1;
+            backdrop-filter: blur(5px);
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .footer-section h4 {
+            font-size: 16px;
+            margin-bottom: 12px;
+            color: var(--white);
+        }
+
+        .footer-section p {
+            margin-bottom: 6px;
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .footer-section a {
+            color: var(--white);
+            text-decoration: none;
+            opacity: 0.9;
+            transition: opacity 0.3s;
+            font-size: 14px;
+        }
+
+        .footer-section a:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            opacity: 0.8;
+            font-size: 14px;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+            
+            .header-content {
+                flex-wrap: wrap;
+                padding-right: 50px;
+            }
+            
+            .logo {
+                flex: 1;
+                min-width: 0;
+            }
+            
+            .nav {
+                position: fixed;
+                top: 0;
+                right: -100%;
+                width: 280px;
+                height: 100vh;
+                background-color: var(--dark-blue);
+                transition: right 0.3s ease;
+                z-index: 1000;
+                overflow-y: auto;
+                box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+            }
+            
+            .nav.active {
+                right: 0;
+            }
+            
+            .nav .container {
+                padding: 0;
+                height: 100%;
+            }
+            
+            .nav-list {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                padding-top: 50px;
+            }
+            
+            .nav-list li {
+                width: 100%;
+                min-width: auto;
+            }
+            
+            .nav-link {
+                padding: 14px 20px;
+                text-align: left;
+                border-bottom: 1px solid rgba(255,255,255,0.1);
+                font-size: 14px;
+            }
+            
+            .nav-link:hover,
+            .nav-link.active {
+                background-color: var(--primary-blue);
+            }
+            
+            .search-bar {
+                order: 3;
+                width: 100%;
+                margin-top: 12px;
+            }
+            
+            .page-title {
+                font-size: 22px;
+            }
+            
+            .news-grid,
+            .vacancies-grid,
+            .scheme-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .step-card {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .step-icon {
+                width: 60px;
+                height: 60px;
+                font-size: 24px;
+            }
+            
+            .map-container {
+                height: 300px;
+            }
+            
+            .review-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+            }
+            
+            .review-date {
+                margin-left: 0;
+            }
+            
+            .footer-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0,0,0,0.5);
+                z-index: 999;
+            }
+            
+            .nav-overlay.active {
+                display: block;
+            }
+
+            .news-modal {
+                padding: 15px;
+            }
+            
+            .news-modal-content {
+                max-width: 100%;
+                max-height: 90vh;
+            }
+            
+            .news-modal-image-container {
+                height: 220px;
+            }
+            
+            .news-modal-body {
+                padding: 20px;
+            }
+            
+            .news-modal-title {
+                font-size: 22px;
+            }
+            
+            .news-modal-close {
+                top: 10px;
+                right: 10px;
+                width: 35px;
+                height: 35px;
+                font-size: 24px;
+            }
+            
+            .news-image-container {
+                height: 180px;
+            }
+            
+            .news-content {
+                padding: 15px;
+            }
+            
+            .news-content h3 {
+                font-size: 18px;
+            }
+
+            .vacancies-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo-icon {
+                width: 40px;
+                height: 40px;
+            }
+            
+            .logo h1 {
+                font-size: 18px;
+            }
+            
+            .vacancy-badge {
+                position: static;
+                display: inline-block;
+                margin-bottom: 8px;
+            }
+            
+            .vacancy-card h3 {
+                padding-right: 0;
+            }
+            
+            .search-bar button {
+                padding: 10px 15px;
+            }
+            
+            .map-container {
+                height: 250px;
+            }
+        }
+
+        /* Пустые состояния */
+        .no-data {
+            text-align: center;
+            padding: 50px;
+            color: #999;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <!-- Шапка сайта -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="https://raw.githubusercontent.com/Marat1488-bot/rabotarossii/main/logorabotarossii.png" alt="Работа России" class="logo-icon">
+                    <div class="logo-text">
+                        <h1>ЦЗН г. Большой Камень</h1>
+                        <p class="subtitle">Центр занятости населения</p>
+                    </div>
+                </div>
+                
+                <button class="mobile-menu-btn" id="mobileMenuBtn">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+            
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Поиск по сайту...">
+                <button id="searchBtn">Поиск</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="nav-overlay" id="navOverlay"></div>
+    <nav class="nav" id="mainNav">
+        <div class="container">
+            <ul class="nav-list">
+                <li><a href="#news" class="nav-link active" data-page="news">Новости</a></li>
+                <li><a href="#employers" class="nav-link" data-page="employers">Работодателям</a></li>
+                <li><a href="#jobseekers" class="nav-link" data-page="jobseekers">Ищущим работу</a></li>
+                <li><a href="#hot-vacancies" class="nav-link" data-page="hot-vacancies">Горячие вакансии</a></li>
+                <li><a href="#contacts" class="nav-link" data-page="contacts">Контакты</a></li>
+                <li><a href="#appeal" class="nav-link" data-page="appeal">Электронное обращение</a></li>
+                <li><a href="#reviews" class="nav-link" data-page="reviews">Отзывы и предложения</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="main">
+        <div class="container">
+            <!-- Страница: Новости -->
+            <section id="news" class="page active">
+                <h2 class="page-title">Новости и события</h2>
+                <div class="news-grid" id="newsGrid">
+                    <!-- Новости загружаются из news.js -->
+                </div>
+            </section>
+
+            <!-- Страница: Работодателям -->
+            <section id="employers" class="page">
+                <h2 class="page-title">Работодателям</h2>
+                <p class="page-description">Схема государственной поддержки и цифровых сервисов для работодателей</p>
+                
+                <div class="scheme-container">
+                    <div class="scheme-block">
+                        <div class="scheme-title">Меры государственной поддержки</div>
+                        <div class="scheme-grid">
+                            <div class="scheme-item">
+                                <h4>Субсидии на создание рабочих мест</h4>
+                                <ul>
+                                    <li>Компенсация затрат на организацию рабочих мест</li>
+                                    <li>Для трудоустройства безработных граждан</li>
+                                    <li>До 300 000 рублей на одно рабочее место</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="scheme-item">
+                                <h4>Возмещение затрат на стажировку</h4>
+                                <ul>
+                                    <li>Финансовая поддержка при организации стажировок</li>
+                                    <li>Для безработных граждан и выпускников</li>
+                                    <li>Компенсация до 100% расходов</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="scheme-item">
+                                <h4>Субсидии на оплату труда инвалидов</h4>
+                                <ul>
+                                    <li>Частичная компенсация расходов на заработную плату</li>
+                                    <li>При трудоустройстве граждан с инвалидностью</li>
+                                    <li>До 70% от размера заработной платы</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="scheme-item">
+                                <h4>Поддержка общественных работ</h4>
+                                <ul>
+                                    <li>Финансирование программ временной занятости</li>
+                                    <li>Для граждан, испытывающих трудности в поиске работы</li>
+                                    <li>Оплата труда и страховых взносов</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="scheme-block">
+                        <div class="scheme-title">Цифровые сервисы</div>
+                        <div class="scheme-grid">
+                            <div class="scheme-item">
+                                <h4>Портал "Работа России"</h4>
+                                <ul>
+                                    <li>Размещение вакансий в единой базе</li>
+                                    <li>Поиск кандидатов по критериям</li>
+                                    <li>Подача заявок на меры поддержки онлайн</li>
+                                    <li><a href="https://trudvsem.ru" target="_blank" class="news-link">trudvsem.ru →</a></li>
+                                </ul>
+                            </div>
+                            
+                            <div class="scheme-item">
+                                <h4>Электронный документооборот</h4>
+                                <ul>
+                                    <li>Подача документов в электронном виде</li>
+                                    <li>Получение услуг без личного визита</li>
+                                    <li>Быстрое рассмотрение заявлений</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="scheme-item">
+                                <h4>Онлайн-консультации</h4>
+                                <ul>
+                                    <li>Консультации специалистов по видеосвязи</li>
+                                    <li>Запись на прием через личный кабинет</li>
+                                    <li>Ответы на вопросы в режиме реального времени</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="scheme-item">
+                                <h4>Статистика и аналитика</h4>
+                                <ul>
+                                    <li>Доступ к аналитическим отчетам</li>
+                                    <li>Информация о рынке труда</li>
+                                    <li>Прогнозы востребованности профессий</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Страница: Гражданам, ищущим работу -->
+            <section id="jobseekers" class="page">
+                <h2 class="page-title">Гражданам, ищущим работу</h2>
+                <p class="page-description">Пошаговая схема получения услуг и мер поддержки</p>
+                
+                <div class="steps-scheme">
+                    <div class="step-card">
+                        <div class="step-icon">1</div>
+                        <div class="step-content">
+                            <h4>Регистрация на портале "Работа России"</h4>
+                            <p>Зарегистрируйтесь на сайте trudvsem.ru через Госуслуги или создайте новый аккаунт. Заполните электронную анкету.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="step-card">
+                        <div class="step-icon">2</div>
+                        <div class="step-content">
+                            <h4>Подача заявления в ЦЗН</h4>
+                            <p>Выберите нужную услугу и подайте электронное заявление через личный кабинет. Приложите необходимые документы.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="step-card">
+                        <div class="step-icon">3</div>
+                        <div class="step-content">
+                            <h4>Ожидание предложений по вакансиям</h4>
+                            <p>В течение 11 рабочих дней вам будут предложены подходящие вакансии. Отслеживайте статус заявления в личном кабинете.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="step-card">
+                        <div class="step-icon">4</div>
+                        <div class="step-content">
+                            <h4>Получение мер поддержки</h4>
+                            <p>После регистрации в качестве безработного вы можете претендовать на пособие, обучение или другие меры поддержки.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="scheme-block" style="margin-top: 30px;">
+                    <div class="scheme-title">Меры государственной поддержки</div>
+                    <div class="scheme-grid">
+                        <div class="scheme-item">
+                            <h4>Пособие по безработице</h4>
+                            <ul>
+                                <li>Выплата в период поиска работы</li>
+                                <li>От 1 500 до 12 792 рублей в месяц</li>
+                                <li>На срок до 12 месяцев</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="scheme-item">
+                            <h4>Профессиональное обучение</h4>
+                            <ul>
+                                <li>Бесплатное обучение по направлению ЦЗН</li>
+                                <li>Выплата стипендии в период обучения</li>
+                                <li>Трудоустройство после завершения курса</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="scheme-item">
+                            <h4>Содействие самозанятости</h4>
+                            <ul>
+                                <li>Финансовая помощь при регистрации ИП</li>
+                                <li>Единовременная выплата до 200 000 рублей</li>
+                                <li>Консультационная поддержка</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="scheme-item">
+                            <h4>Социальный контракт</h4>
+                            <ul>
+                                <li>Помощь малоимущим семьям и гражданам</li>
+                                <li>До 350 000 рублей на развитие бизнеса</li>
+                                <li>До 200 000 рублей на развитие ЛПХ</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Страница: Горячие вакансии -->
+            <section id="hot-vacancies" class="page">
+                <h2 class="page-title">Горячие вакансии</h2>
+                <p class="page-description">Актуальные вакансии, требующие срочного закрытия</p>
+                
+                <div class="vacancies-grid" id="vacanciesGrid">
+                    <!-- Вакансии загружаются из vacancies.js -->
+                </div>
+            </section>
+
+            <!-- Страница: Контакты -->
+            <section id="contacts" class="page">
+                <h2 class="page-title">Наши контакты</h2>
+                <p class="page-description">Свяжитесь с нами удобным для вас способом</p>
+                
+                <div class="contacts-simple">
+                    <div class="contact-info">
+                        <h3>Контактная информация</h3>
+                        
+                        <div class="contact-item">
+                            <div class="contact-icon-small">📞</div>
+                            <div class="contact-text">
+                                <strong>Телефон</strong>
+                                <p><a href="tel:+74233540834">8 (42335) 4-08-34</a></p>
+                            </div>
+                        </div>
+                        
+                        <div class="contact-item">
+                            <div class="contact-icon-small">✉️</div>
+                            <div class="contact-text">
+                                <strong>Электронная почта</strong>
+                                <p><a href="mailto:sznbkamen@trud25.ru">sznbkamen@trud25.ru</a></p>
+                            </div>
+                        </div>
+                        
+                        <div class="contact-item">
+                            <div class="contact-icon-small">📍</div>
+                            <div class="contact-text">
+                                <strong>Адрес</strong>
+                                <p>692801, Приморский край,<br>г. Большой Камень, ул. Блюхера, д. 21</p>
+                            </div>
+                        </div>
+                        
+                        <div class="contact-item">
+                            <div class="contact-icon-small">🕐</div>
+                            <div class="contact-text">
+                                <strong>Режим работы</strong>
+                                <p>Понедельник–четверг: с 09:00 до 18:00<br>
+                                Пятница: с 09:00 до 16:45<br>
+                                Суббота и воскресенье: выходные дни</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="map-wrapper">
+                        <h3>Как нас найти</h3>
+                        <div class="map-container">
+                            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2912.726029090395!2d132.3425115!3d43.1102722!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x5fb3c2cbffffffff%3A0x1ea54b2fe4059476!2z0JrQk9Ca0KMg0KbQtdC90YLRgCDQt9Cw0L3Rj9GC0L7RgdGC0Lgg0L3QsNGB0LXQu9C10L3QuNGP!5e0!3m2!1sru!2sru!4v1770550228388!5m2!1sru!2sru" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                        </div>
+                        <p style="margin-top: 10px; font-size: 14px; color: #666; text-align: center;">
+                            Центр занятости населения г. Большой Камень, ул. Блюхера, д. 21
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Страница: Электронное обращение - EmailJS версия -->
+            <section id="appeal" class="page">
+                <h2 class="page-title">Электронное обращение граждан</h2>
+                <p class="page-description">Вы можете обратиться в Центр занятости населения с любым вопросом</p>
+                
+                <form class="appeal-form" id="appealForm">
+                    <div class="form-group">
+                        <label for="appealName">Фамилия Имя Отчество <span class="required">*</span></label>
+                        <input type="text" id="appealName" name="name" required placeholder="Иванов Иван Иванович">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="appealEmail">Электронная почта <span class="required">*</span></label>
+                        <input type="email" id="appealEmail" name="email" required placeholder="example@mail.ru">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="appealPhone">Контактный телефон</label>
+                        <input type="tel" id="appealPhone" name="phone" placeholder="+7 (___) ___-__-__">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="appealCategory">Категория обращения <span class="required">*</span></label>
+                        <select id="appealCategory" name="category" required>
+                            <option value="">Выберите категорию</option>
+                            <option value="Содействие в трудоустройстве">Содействие в трудоустройстве</option>
+                            <option value="Пособие по безработице">Пособие по безработице</option>
+                            <option value="Профессиональное обучение">Профессиональное обучение</option>
+                            <option value="Содействие самозанятости">Содействие самозанятости</option>
+                            <option value="Социальный контракт">Социальный контракт</option>
+                            <option value="Другое">Другое</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="appealMessage">Текст обращения <span class="required">*</span></label>
+                        <textarea id="appealMessage" name="message" rows="6" required placeholder="Опишите ваш вопрос подробно..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="appealConsent" name="consent" required>
+                            <span>Я согласен на обработку персональных данных <span class="required">*</span></span>
+                        </label>
+                    </div>
+
+                    <div id="appealFormStatus" class="form-status"></div>
+
+                    <button type="submit" class="submit-btn">Отправить обращение</button>
+                </form>
+
+                <div class="info-note">
+                    <p><strong>Обратите внимание:</strong></p>
+                    <ul>
+                        <li>Ответ на ваше обращение будет направлен на указанную электронную почту в течение 30 дней</li>
+                        <li>Для получения оперативной консультации вы можете позвонить по телефону: 8 (42335) 4-08-34</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Страница: Отзывы и предложения -->
+            <section id="reviews" class="page">
+                <h2 class="page-title">Отзывы и предложения</h2>
+                
+                <div class="review-form-block">
+                    <h3>Оставить отзыв или предложение</h3>
+                    <p class="form-note">Ваш отзыв будет опубликован после модерации</p>
+                    
+                    <form class="review-form" id="reviewForm">
+                        <div class="form-group">
+                            <label for="reviewName">Имя</label>
+                            <input type="text" id="reviewName" placeholder="Анонимно">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="reviewCategory">Тип отзыва <span class="required">*</span></label>
+                            <select id="reviewCategory" required>
+                                <option value="">Выберите тип</option>
+                                <option value="work-review">Отзыв о работе ЦЗН</option>
+                                <option value="suggestion">Предложение по улучшению</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Оценка работы</label>
+                            <div class="rating-input">
+                                <input type="radio" name="rating" value="5" id="star5">
+                                <label for="star5">★</label>
+                                <input type="radio" name="rating" value="4" id="star4">
+                                <label for="star4">★</label>
+                                <input type="radio" name="rating" value="3" id="star3">
+                                <label for="star3">★</label>
+                                <input type="radio" name="rating" value="2" id="star2">
+                                <label for="star2">★</label>
+                                <input type="radio" name="rating" value="1" id="star1">
+                                <label for="star1">★</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="reviewText">Текст <span class="required">*</span></label>
+                            <textarea id="reviewText" rows="5" required></textarea>
+                        </div>
+
+                        <div id="reviewFormStatus" class="form-status"></div>
+
+                        <button type="submit" class="submit-btn">Отправить</button>
+                    </form>
+                </div>
+
+                <div class="reviews-list" id="reviewsList">
+                    <h3>Опубликованные отзывы</h3>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>ЦЗН г. Большой Камень</h4>
+                    <p>Центр занятости населения</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Контакты</h4>
+                    <p>Телефон: 8 (42335) 4-08-34</p>
+                    <p>Email: sznbkamen@trud25.ru</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Полезные ссылки</h4>
+                    <p><a href="https://trudvsem.ru" target="_blank">Работа России</a></p>
+                    <p><a href="https://gosuslugi.ru" target="_blank">Госуслуги</a></p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 ЦЗН г. Большой Камень. Все права защищены.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Устанавливаем текущую дату
+            const dateField = document.getElementById('appealDate');
+            if (dateField) {
+                const now = new Date();
+                dateField.value = now.toLocaleString('ru-RU');
+            }
+
+            // Навигация
+            const navLinks = document.querySelectorAll('.nav-link');
+            const pages = document.querySelectorAll('.page');
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const mainNav = document.getElementById('mainNav');
+            const navOverlay = document.getElementById('navOverlay');
+            
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    pages.forEach(p => p.classList.remove('active'));
+                    
+                    this.classList.add('active');
+                    
+                    const pageId = this.getAttribute('data-page');
+                    document.getElementById(pageId).classList.add('active');
+                    
+                    closeMobileMenu();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            });
+            
+            function openMobileMenu() {
+                mainNav.classList.add('active');
+                navOverlay.classList.add('active');
+                mobileMenuBtn.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            function closeMobileMenu() {
+                mainNav.classList.remove('active');
+                navOverlay.classList.remove('active');
+                mobileMenuBtn.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+            
+            if (mobileMenuBtn) {
+                mobileMenuBtn.addEventListener('click', function() {
+                    if (mainNav.classList.contains('active')) {
+                        closeMobileMenu();
+                    } else {
+                        openMobileMenu();
+                    }
+                });
+            }
+            
+            if (navOverlay) {
+                navOverlay.addEventListener('click', closeMobileMenu);
+            }
+            
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 768) {
+                    closeMobileMenu();
+                }
+            });
+            
+            // Форматирование телефона
+            const phoneInput = document.getElementById('appealPhone');
+            if (phoneInput) {
+                phoneInput.addEventListener('input', function(e) {
+                    let value = e.target.value.replace(/\D/g, '');
+                    
+                    if (value.length > 0) {
+                        if (value.length <= 1) {
+                            value = '+7 (' + value;
+                        } else if (value.length <= 4) {
+                            value = '+7 (' + value.slice(1);
+                        } else if (value.length <= 7) {
+                            value = '+7 (' + value.slice(1, 4) + ') ' + value.slice(4);
+                        } else if (value.length <= 9) {
+                            value = '+7 (' + value.slice(1, 4) + ') ' + value.slice(4, 7) + '-' + value.slice(7);
+                        } else {
+                            value = '+7 (' + value.slice(1, 4) + ') ' + value.slice(4, 7) + '-' + value.slice(7, 9) + '-' + value.slice(9, 11);
+                        }
+                    }
+                    
+                    e.target.value = value;
+                });
+            }
+        });
+    </script>
+</body>
+</html>

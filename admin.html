@@ -1,0 +1,1778 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель - ЦЗН</title>
+    <script src="config.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: #003A70;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, #003A70 0%, #0066B3 100%);
+        }
+        
+        .login-form {
+            max-width: 400px;
+            margin: 100px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .login-form h2 {
+            color: #003A70;
+            margin-bottom: 20px;
+        }
+        
+        .login-form input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        .login-form button {
+            width: 100%;
+            padding: 12px;
+            background: #0066B3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .login-form button:hover {
+            background: #003A70;
+        }
+        
+        .admin-panel {
+            display: none;
+        }
+        
+        /* ВКЛАДКИ */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .tab-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            flex: 1;
+        }
+        
+        .tab-btn.news-tab {
+            background: #E6F0FA;
+            color: #003A70;
+        }
+        
+        .tab-btn.vacancies-tab {
+            background: #FFF3CD;
+            color: #856404;
+        }
+        
+        .tab-btn.reviews-tab {
+            background: #FFE5E5;
+            color: #E31B23;
+        }
+        
+        .tab-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        .tab-btn.active {
+            background: #0066B3;
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* ФОРМЫ */
+        .add-form {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #003A70;
+            font-weight: 600;
+            font-size: 15px;
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 15px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #0066B3;
+        }
+        
+        .form-group small {
+            color: #999;
+            font-size: 12px;
+            display: block;
+            margin-top: 5px;
+        }
+        
+        /* ЗАГРУЗКА ФОТО */
+        .image-upload-container {
+            border: 2px dashed #0066B3;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            background: #f9f9f9;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 15px;
+        }
+        
+        .image-upload-container:hover {
+            background: #E6F0FA;
+            border-color: #003A70;
+        }
+        
+        .image-upload-container.dragover {
+            background: #E6F0FA;
+            border-color: #003A70;
+            transform: scale(1.02);
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        
+        .upload-text {
+            font-size: 18px;
+            font-weight: 600;
+            color: #003A70;
+            margin-bottom: 5px;
+        }
+        
+        .upload-hint {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .image-preview-container {
+            margin: 20px 0;
+            display: none;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            padding: 20px;
+            background: #fafafa;
+        }
+        
+        .image-preview-container.show {
+            display: block;
+        }
+        
+        .image-preview {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+        }
+        
+        .image-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .image-size {
+            background: #e9ecef;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+        
+        .change-image-btn {
+            padding: 8px 16px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .image-url-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        .image-url-section summary {
+            color: #0066B3;
+            cursor: pointer;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        /* ТЕГИ ДЛЯ НОВОСТЕЙ */
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            min-height: 60px;
+        }
+        
+        .tag {
+            background: #E6F0FA;
+            color: #003A70;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .tag-remove {
+            cursor: pointer;
+            color: #E31B23;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .tag-input-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .tag-input-group input {
+            flex: 1;
+        }
+        
+        .tag-input-group button {
+            padding: 0 20px;
+            background: #0066B3;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        /* БЕЙДЖИ ДЛЯ ВАКАНСИЙ */
+        .badge-selector {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+        
+        .badge-option {
+            padding: 10px 20px;
+            border: 2px solid #ddd;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .badge-option:hover {
+            transform: scale(1.05);
+        }
+        
+        .badge-option.selected {
+            background: #0066B3;
+            color: white;
+            border-color: #0066B3;
+        }
+        
+        .badge-option.hot { border-color: #E31B23; color: #E31B23; }
+        .badge-option.hot.selected { background: #E31B23; color: white; }
+        
+        .badge-option.attractive { border-color: #00A650; color: #00A650; }
+        .badge-option.attractive.selected { background: #00A650; color: white; }
+        
+        .badge-option.flexible { border-color: #0066B3; color: #0066B3; }
+        .badge-option.flexible.selected { background: #0066B3; color: white; }
+        
+        .badge-option.housing { border-color: #FF6B35; color: #FF6B35; }
+        .badge-option.housing.selected { background: #FF6B35; color: white; }
+        
+        .badge-option.parttime { border-color: #6C757D; color: #6C757D; }
+        .badge-option.parttime.selected { background: #6C757D; color: white; }
+        
+        .badge-option.none { border-color: #999; color: #999; }
+        .badge-option.none.selected { background: #999; color: white; }
+        
+        /* ДЕТАЛИ ВАКАНСИЙ */
+        .details-list {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        
+        .detail-item {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        
+        .detail-item input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .remove-detail {
+            background: #E31B23;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            width: 36px;
+            height: 36px;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .add-detail-btn {
+            padding: 10px 20px;
+            background: #00A650;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        
+        .add-detail-btn:hover {
+            background: #008f42;
+        }
+        
+        /* КНОПКИ */
+        .save-btn {
+            padding: 14px 30px;
+            background: #00A650;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        
+        .save-btn:hover {
+            background: #008f42;
+        }
+        
+        .logout-btn {
+            padding: 10px 20px;
+            background: #E31B23;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+        
+        .logout-btn:hover {
+            background: #c41a21;
+        }
+        
+        /* СПИСКИ */
+        .items-list {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .list-item {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            align-items: center;
+            transition: box-shadow 0.3s;
+        }
+        
+        .list-item:hover {
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        }
+        
+        .item-info {
+            flex: 1;
+        }
+        
+        .item-info h3 {
+            color: #003A70;
+            margin-bottom: 8px;
+            font-size: 18px;
+        }
+        
+        .item-meta {
+            display: flex;
+            gap: 15px;
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .item-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .item-actions button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: opacity 0.3s;
+        }
+        
+        .item-actions button:hover {
+            opacity: 0.9;
+        }
+        
+        .edit-btn {
+            background: #0066B3;
+            color: white;
+        }
+        
+        .delete-btn {
+            background: #E31B23;
+            color: white;
+        }
+        
+        /* ========== СТИЛИ ДЛЯ ОТЗЫВОВ ========== */
+        .reviews-header {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .reviews-stats {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .stat-badge {
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 600;
+            background: white;
+            border: 1px solid #ddd;
+        }
+        
+        .stat-badge.pending {
+            background: #FFF3CD;
+            border-color: #FFA500;
+            color: #856404;
+        }
+        
+        .stat-badge.approved {
+            background: #d4edda;
+            border-color: #00A650;
+            color: #155724;
+        }
+        
+        .filter-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            padding: 10px 25px;
+            border: 1px solid #ddd;
+            border-radius: 30px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .filter-btn:hover {
+            border-color: #0066B3;
+            background: #E6F0FA;
+        }
+        
+        .filter-btn.active {
+            background: #0066B3;
+            color: white;
+            border-color: #0066B3;
+        }
+        
+        .reviews-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .review-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+        }
+        
+        .review-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .review-card.pending {
+            border-left: 4px solid #FFA500;
+        }
+        
+        .review-card.approved {
+            border-left: 4px solid #00A650;
+            opacity: 0.9;
+        }
+        
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+        
+        .review-author {
+            font-size: 16px;
+            font-weight: 600;
+            color: #003A70;
+        }
+        
+        .review-rating {
+            color: #FFD700;
+            font-size: 14px;
+            letter-spacing: 2px;
+        }
+        
+        .review-category {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            width: fit-content;
+        }
+        
+        .review-category.work-review {
+            background: #E6F0FA;
+            color: #003A70;
+        }
+        
+        .review-category.suggestion {
+            background: #FFF3CD;
+            color: #856404;
+        }
+        
+        .review-date {
+            color: #999;
+            font-size: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .review-text {
+            color: #333;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            flex: 1;
+            max-height: 150px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        
+        .review-text::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .review-text::-webkit-scrollbar-thumb {
+            background: #ddd;
+            border-radius: 4px;
+        }
+        
+        .review-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: auto;
+        }
+        
+        .review-actions button {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        
+        .review-view {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .review-view:hover {
+            background: #5a6268;
+        }
+        
+        .review-approve {
+            background: #00A650;
+            color: white;
+        }
+        
+        .review-approve:hover {
+            background: #008f42;
+        }
+        
+        .review-reject {
+            background: #E31B23;
+            color: white;
+        }
+        
+        .review-reject:hover {
+            background: #c41a21;
+        }
+        
+        /* Модальное окно для просмотра отзыва */
+        .review-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 20000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .review-modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        .review-modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        .review-modal-close:hover {
+            color: #E31B23;
+        }
+        
+        /* ПОДТВЕРЖДЕНИЕ УДАЛЕНИЯ */
+        .confirm-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 20000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .confirm-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+        
+        .confirm-content h3 {
+            color: #003A70;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        
+        .confirm-content p {
+            margin-bottom: 25px;
+            color: #666;
+        }
+        
+        .confirm-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        .confirm-buttons button {
+            padding: 10px 30px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .confirm-yes {
+            background: #E31B23;
+            color: white;
+        }
+        
+        .confirm-no {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .hr {
+            margin: 20px 0;
+            border: none;
+            border-top: 1px solid #eee;
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+            font-style: italic;
+            grid-column: 1 / -1;
+        }
+        
+        .error {
+            color: #E31B23;
+            margin-bottom: 10px;
+            display: none;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-top: 15px;
+            color: #0066B3;
+            text-decoration: none;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        
+        /* Адаптивность */
+        @media (max-width: 1024px) {
+            .reviews-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .reviews-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .reviews-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Форма входа -->
+        <div class="login-form" id="loginForm">
+            <h2>Вход в админ-панель</h2>
+            <div class="error" id="loginError">Неверный пароль</div>
+            <input type="password" id="password" placeholder="Введите пароль">
+            <button onclick="login()">Войти</button>
+            <p style="text-align: center; margin-top: 15px;">
+                <a href="index.html" class="back-link">← Вернуться на сайт</a>
+            </p>
+        </div>
+        
+        <!-- Админ-панель -->
+        <div class="admin-panel" id="adminPanel">
+            <div class="header">
+                <h1>Управление контентом</h1>
+                <button class="logout-btn" onclick="logout()">Выйти</button>
+            </div>
+            
+            <!-- Вкладки -->
+            <div class="tabs">
+                <button class="tab-btn news-tab active" onclick="switchTab('news')">📰 НОВОСТИ</button>
+                <button class="tab-btn vacancies-tab" onclick="switchTab('vacancies')">💼 ВАКАНСИИ</button>
+                <button class="tab-btn reviews-tab" onclick="switchTab('reviews')">⭐ ОТЗЫВЫ</button>
+            </div>
+            
+            <!-- ========== ВКЛАДКА НОВОСТЕЙ ========== -->
+            <div id="tab-news" class="tab-content active">
+                <div class="add-form">
+                    <h2 style="margin-bottom: 25px;" id="newsFormTitle">➕ Добавить новость</h2>
+                    <form id="newsForm">
+                        <div class="form-group">
+                            <label>Заголовок <span style="color:#E31B23;">*</span></label>
+                            <input type="text" id="newsTitle" required placeholder="Например: Ярмарка вакансий 2026">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Дата <span style="color:#E31B23;">*</span></label>
+                            <input type="text" id="newsDate" value="05.03.2026" required placeholder="ДД.ММ.ГГГГ">
+                        </div>
+                        
+                        <!-- Загрузка фото -->
+                        <div class="form-group">
+                            <label>Фотография</label>
+                            
+                            <div class="image-upload-container" id="newsDropArea" onclick="document.getElementById('newsFileInput').click()">
+                                <div class="upload-icon">📷</div>
+                                <div class="upload-text">Нажмите или перетащите фото</div>
+                                <div class="upload-hint">Поддерживаются JPG, PNG, GIF (до 10 МБ)</div>
+                            </div>
+                            
+                            <input type="file" id="newsFileInput" accept="image/*" style="display: none;" onchange="handleNewsFileSelect(this)">
+                            
+                            <div class="image-preview-container" id="newsImagePreviewContainer">
+                                <img id="newsImagePreview" class="image-preview">
+                                <div class="image-info">
+                                    <span id="newsImageSize" class="image-size"></span>
+                                    <button type="button" class="change-image-btn" onclick="resetNewsImage()">Изменить фото</button>
+                                </div>
+                            </div>
+                            
+                            <details class="image-url-section">
+                                <summary>Или вставьте ссылку на фото</summary>
+                                <input type="url" id="newsImage" placeholder="https://example.com/image.jpg" oninput="previewNewsImageUrl(this.value)">
+                            </details>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Краткое описание <span style="color:#E31B23;">*</span></label>
+                            <textarea id="newsPreview" rows="3" required placeholder="Кратко о новости (будет видно в ленте)"></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Подробности (необязательно)</label>
+                            <textarea id="newsDetails" rows="4" placeholder="Дополнительная информация, которая будет выделена"></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Полный текст (необязательно)</label>
+                            <textarea id="newsContent" rows="8" placeholder="Полный текст новости..."></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Хештеги</label>
+                            <div class="tags-container" id="newsTagsContainer">
+                                <div style="color:#999;">Теги не добавлены</div>
+                            </div>
+                            <div class="tag-input-group">
+                                <input type="text" id="newsTagInput" placeholder="Введите тег">
+                                <button type="button" onclick="addNewsTag()">Добавить</button>
+                            </div>
+                        </div>
+                        
+                        <hr class="hr">
+                        
+                        <button type="submit" class="save-btn" id="newsSubmitBtn">Опубликовать</button>
+                        <button type="button" style="margin-left: 10px; padding: 14px 30px; background: #6c757d; color: white; border: none; border-radius: 8px;" onclick="resetNewsForm()">Очистить</button>
+                    </form>
+                </div>
+                
+                <div class="items-list">
+                    <h2 style="margin-bottom: 25px;">📰 Все новости</h2>
+                    <div id="newsList"></div>
+                </div>
+            </div>
+            
+            <!-- ========== ВКЛАДКА ВАКАНСИЙ ========== -->
+            <div id="tab-vacancies" class="tab-content">
+                <div class="add-form">
+                    <h2 style="margin-bottom: 25px;" id="vacancyFormTitle">➕ Добавить вакансию</h2>
+                    <form id="vacancyForm">
+                        <div class="form-group">
+                            <label>Название вакансии <span style="color:#E31B23;">*</span></label>
+                            <input type="text" id="vacancyTitle" required placeholder="Например: Водитель автобуса">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Компания <span style="color:#E31B23;">*</span></label>
+                            <input type="text" id="vacancyCompany" required placeholder="ООО ГорТранс">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Зарплата <span style="color:#E31B23;">*</span></label>
+                            <input type="text" id="vacancySalary" required placeholder="от 60 000 ₽">
+                        </div>
+                        
+                        <!-- Ссылка для отклика -->
+                        <div class="form-group">
+                            <label>Ссылка для отклика</label>
+                            <input type="url" id="vacancyLink" placeholder="https://hh.ru/vacancy/123 или https://t.me/...">
+                            <small>Оставьте пустым, если ссылки нет</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Бейдж (метка)</label>
+                            <div class="badge-selector" id="badgeSelector">
+                                <div class="badge-option none selected" data-value="">🔘 Без бейджа</div>
+                                <div class="badge-option hot" data-value="hot">🔥 Срочно</div>
+                                <div class="badge-option attractive" data-value="attractive">💰 Высокая ЗП</div>
+                                <div class="badge-option flexible" data-value="flexible">⏰ Гибкий график</div>
+                                <div class="badge-option housing" data-value="housing">🏠 Жилье</div>
+                                <div class="badge-option parttime" data-value="parttime">⚡ Подработка</div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Детали вакансии</label>
+                            <div class="details-list" id="detailsList">
+                                <!-- Детали добавляются через JS -->
+                            </div>
+                            <button type="button" class="add-detail-btn" onclick="addVacancyDetail()">+ Добавить деталь</button>
+                        </div>
+                        
+                        <hr class="hr">
+                        
+                        <button type="submit" class="save-btn" id="vacancySubmitBtn">Опубликовать</button>
+                        <button type="button" style="margin-left: 10px; padding: 14px 30px; background: #6c757d; color: white; border: none; border-radius: 8px;" onclick="resetVacancyForm()">Очистить</button>
+                    </form>
+                </div>
+                
+                <div class="items-list">
+                    <h2 style="margin-bottom: 25px;">💼 Все вакансии</h2>
+                    <div id="vacanciesList"></div>
+                </div>
+            </div>
+            
+            <!-- ========== ВКЛАДКА ОТЗЫВОВ ========== -->
+            <div id="tab-reviews" class="tab-content">
+                <div class="reviews-header">
+                    <h2 style="color: #003A70;">⭐ Модерация отзывов</h2>
+                    <div class="reviews-stats">
+                        <span class="stat-badge pending">
+                            ⏳ Ожидает: <strong id="pendingCount">0</strong>
+                        </span>
+                        <span class="stat-badge approved">
+                            ✅ Опубликовано: <strong id="approvedCount">0</strong>
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Фильтры -->
+                <div class="filter-container">
+                    <button class="filter-btn active" onclick="filterReviews('pending')">⏳ На модерации</button>
+                    <button class="filter-btn" onclick="filterReviews('approved')">✅ Опубликованные</button>
+                </div>
+                
+                <!-- Сетка отзывов -->
+                <div class="reviews-grid" id="reviewsGrid">
+                    <!-- Отзывы загружаются динамически -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Модальное окно подтверждения удаления -->
+    <div id="confirmModal" class="confirm-modal">
+        <div class="confirm-content">
+            <h3>Подтверждение удаления</h3>
+            <p id="confirmMessage">Вы уверены, что хотите удалить эту запись?</p>
+            <div class="confirm-buttons">
+                <button class="confirm-yes" id="confirmYes">Да, удалить</button>
+                <button class="confirm-no" id="confirmNo">Отмена</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // ========== ИНИЦИАЛИЗАЦИЯ ==========
+        let currentNewsId = null;
+        let currentVacancyId = null;
+        let newsTags = [];
+        let newsImageData = null;
+        let vacancyDetails = ['', '', ''];
+        let selectedBadge = '';
+        let deleteId = null;
+        let deleteType = null;
+        
+        // Для отзывов
+        let allReviews = [];
+        let currentFilter = 'pending';
+        
+        // Дефолтные вакансии
+        const DEFAULT_VACANCIES = []
+        
+        // ========== АВТОРИЗАЦИЯ ==========
+        if (localStorage.getItem(CONFIG.STORAGE_KEYS.AUTH) === 'true') {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('adminPanel').style.display = 'block';
+            loadNewsList();
+            loadVacanciesList();
+            loadReviews();
+            renderVacancyDetails();
+        }
+        
+        function login() {
+            const pass = document.getElementById('password').value;
+            if (pass === CONFIG.ADMIN_PASSWORD) {
+                localStorage.setItem(CONFIG.STORAGE_KEYS.AUTH, 'true');
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('adminPanel').style.display = 'block';
+                loadNewsList();
+                loadVacanciesList();
+                loadReviews();
+                renderVacancyDetails();
+                document.getElementById('loginError').style.display = 'none';
+            } else {
+                document.getElementById('loginError').style.display = 'block';
+            }
+        }
+        
+        function logout() {
+            localStorage.removeItem(CONFIG.STORAGE_KEYS.AUTH);
+            location.reload();
+        }
+        
+        // ========== ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК ==========
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            if (tab === 'news') {
+                document.querySelector('.tab-btn.news-tab').classList.add('active');
+                document.getElementById('tab-news').classList.add('active');
+            } else if (tab === 'vacancies') {
+                document.querySelector('.tab-btn.vacancies-tab').classList.add('active');
+                document.getElementById('tab-vacancies').classList.add('active');
+                renderVacancyDetails();
+            } else if (tab === 'reviews') {
+                document.querySelector('.tab-btn.reviews-tab').classList.add('active');
+                document.getElementById('tab-reviews').classList.add('active');
+                renderReviews();
+            }
+        }
+        
+        // ========== РАБОТА С НОВОСТЯМИ ==========
+        
+        function loadNewsList() {
+            const news = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.NEWS) || '[]');
+            const list = document.getElementById('newsList');
+            
+            if (news.length === 0) {
+                list.innerHTML = '<p class="no-data">Новостей пока нет</p>';
+                return;
+            }
+            
+            news.sort((a, b) => {
+                const [d1, m1, y1] = a.date.split('.').map(Number);
+                const [d2, m2, y2] = b.date.split('.').map(Number);
+                return new Date(y2, m2-1, d2) - new Date(y1, m1-1, d1);
+            });
+            
+            let html = '';
+            news.forEach(item => {
+                html += `
+                    <div class="list-item">
+                        <div class="item-info">
+                            <h3>${item.title}</h3>
+                            <div class="item-meta">
+                                <span>📅 ${item.date}</span>
+                                ${item.tags && item.tags.length ? `<span>🏷️ ${item.tags.length} тегов</span>` : ''}
+                                ${item.image ? '<span>📷 с фото</span>' : ''}
+                            </div>
+                            <p>${item.preview.substring(0, 100)}...</p>
+                        </div>
+                        <div class="item-actions">
+                            <button class="edit-btn" onclick="editNews(${item.id})">✏️ Изменить</button>
+                            <button class="delete-btn" onclick="confirmDelete('news', ${item.id})">🗑️ Удалить</button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            list.innerHTML = html;
+        }
+        
+        function handleNewsFileSelect(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                
+                if (file.size > 10 * 1024 * 1024) {
+                    alert('Файл слишком большой. Максимальный размер 10 МБ');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    newsImageData = e.target.result;
+                    
+                    const preview = document.getElementById('newsImagePreview');
+                    preview.src = e.target.result;
+                    
+                    const size = (file.size / 1024).toFixed(1);
+                    document.getElementById('newsImageSize').textContent = size + ' KB';
+                    
+                    document.getElementById('newsImagePreviewContainer').classList.add('show');
+                    document.getElementById('newsImage').value = '';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        const newsDropArea = document.getElementById('newsDropArea');
+        if (newsDropArea) {
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                newsDropArea.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                newsDropArea.addEventListener(eventName, () => {
+                    newsDropArea.classList.add('dragover');
+                });
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                newsDropArea.addEventListener(eventName, () => {
+                    newsDropArea.classList.remove('dragover');
+                });
+            });
+            
+            newsDropArea.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                document.getElementById('newsFileInput').files = files;
+                handleNewsFileSelect(document.getElementById('newsFileInput'));
+            });
+        }
+        
+        function previewNewsImageUrl(url) {
+            if (url) {
+                newsImageData = url;
+                document.getElementById('newsImagePreview').src = url;
+                document.getElementById('newsImagePreviewContainer').classList.add('show');
+                document.getElementById('newsImageSize').textContent = 'URL фото';
+            }
+        }
+        
+        function resetNewsImage() {
+            document.getElementById('newsFileInput').value = '';
+            document.getElementById('newsImagePreviewContainer').classList.remove('show');
+            document.getElementById('newsImage').value = '';
+            newsImageData = null;
+        }
+        
+        function renderNewsTags() {
+            const container = document.getElementById('newsTagsContainer');
+            if (newsTags.length === 0) {
+                container.innerHTML = '<div style="color:#999;">Теги не добавлены</div>';
+                return;
+            }
+            
+            let html = '';
+            newsTags.forEach((tag, index) => {
+                html += `
+                    <div class="tag">
+                        #${tag}
+                        <span class="tag-remove" onclick="removeNewsTag(${index})">×</span>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+        
+        function addNewsTag() {
+            const input = document.getElementById('newsTagInput');
+            const tag = input.value.trim().toLowerCase().replace(/#/g, '');
+            
+            if (tag && !newsTags.includes(tag)) {
+                newsTags.push(tag);
+                renderNewsTags();
+                input.value = '';
+            }
+        }
+        
+        function removeNewsTag(index) {
+            newsTags.splice(index, 1);
+            renderNewsTags();
+        }
+        
+        document.getElementById('newsForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const news = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.NEWS) || '[]');
+            
+            const newsData = {
+                id: currentNewsId || Date.now(),
+                title: document.getElementById('newsTitle').value,
+                date: document.getElementById('newsDate').value,
+                image: newsImageData || document.getElementById('newsImage').value || '',
+                preview: document.getElementById('newsPreview').value,
+                details: document.getElementById('newsDetails').value || '',
+                content: document.getElementById('newsContent').value || '',
+                tags: newsTags
+            };
+            
+            if (currentNewsId) {
+                const index = news.findIndex(n => n.id === currentNewsId);
+                if (index !== -1) {
+                    news[index] = newsData;
+                }
+            } else {
+                news.push(newsData);
+            }
+            
+            localStorage.setItem(CONFIG.STORAGE_KEYS.NEWS, JSON.stringify(news));
+            
+            resetNewsForm();
+            loadNewsList();
+            
+            alert(currentNewsId ? 'Новость обновлена!' : 'Новость опубликована!');
+        });
+        
+        function editNews(id) {
+            const news = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.NEWS) || '[]');
+            const item = news.find(n => n.id === id);
+            if (!item) return;
+            
+            currentNewsId = id;
+            newsTags = item.tags || [];
+            newsImageData = item.image || null;
+            
+            document.getElementById('newsFormTitle').innerHTML = '✏️ Редактировать новость';
+            document.getElementById('newsSubmitBtn').textContent = 'Обновить';
+            document.getElementById('newsTitle').value = item.title;
+            document.getElementById('newsDate').value = item.date;
+            document.getElementById('newsPreview').value = item.preview;
+            document.getElementById('newsDetails').value = item.details || '';
+            document.getElementById('newsContent').value = item.content || '';
+            
+            if (item.image) {
+                document.getElementById('newsImagePreview').src = item.image;
+                document.getElementById('newsImagePreviewContainer').classList.add('show');
+                document.getElementById('newsImageSize').textContent = item.image.startsWith('data:') ? 'Загруженное фото' : 'URL фото';
+            }
+            
+            renderNewsTags();
+            
+            switchTab('news');
+        }
+        
+        function resetNewsForm() {
+            currentNewsId = null;
+            newsTags = [];
+            newsImageData = null;
+            document.getElementById('newsFormTitle').innerHTML = '➕ Добавить новость';
+            document.getElementById('newsSubmitBtn').textContent = 'Опубликовать';
+            document.getElementById('newsForm').reset();
+            document.getElementById('newsImagePreviewContainer').classList.remove('show');
+            document.getElementById('newsFileInput').value = '';
+            renderNewsTags();
+        }
+        
+        // ========== РАБОТА С ВАКАНСИЯМИ ==========
+        
+        function loadVacanciesList() {
+            const vacancies = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.VACANCIES) || '[]');
+            const list = document.getElementById('vacanciesList');
+            
+            if (vacancies.length === 0) {
+                list.innerHTML = '<p class="no-data">Вакансий пока нет</p>';
+                return;
+            }
+            
+            let html = '';
+            vacancies.forEach(item => {
+                let badgeText = '';
+                switch(item.badge) {
+                    case 'hot': badgeText = '🔥 Срочно'; break;
+                    case 'attractive': badgeText = '💰 Высокая ЗП'; break;
+                    case 'flexible': badgeText = '⏰ Гибкий график'; break;
+                    case 'housing': badgeText = '🏠 Жилье'; break;
+                    case 'parttime': badgeText = '⚡ Подработка'; break;
+                }
+                
+                html += `
+                    <div class="list-item">
+                        <div class="item-info">
+                            <h3>${item.title}</h3>
+                            <div class="item-meta">
+                                <span>🏢 ${item.company}</span>
+                                <span>💰 ${item.salary}</span>
+                                ${badgeText ? `<span>${badgeText}</span>` : ''}
+                                ${item.apply_link ? '<span>🔗 есть ссылка</span>' : ''}
+                            </div>
+                            <p>${item.details ? item.details.length + ' условий' : ''}</p>
+                        </div>
+                        <div class="item-actions">
+                            <button class="edit-btn" onclick="editVacancy(${item.id})">✏️ Изменить</button>
+                            <button class="delete-btn" onclick="confirmDelete('vacancy', ${item.id})">🗑️ Удалить</button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            list.innerHTML = html;
+        }
+        
+        function renderVacancyDetails() {
+            const container = document.getElementById('detailsList');
+            if (!container) return;
+            
+            let html = '';
+            vacancyDetails.forEach((detail, index) => {
+                html += `
+                    <div class="detail-item">
+                        <input type="text" value="${detail}" placeholder="Например: График: 2/2" oninput="updateVacancyDetail(${index}, this.value)">
+                        <button class="remove-detail" onclick="removeVacancyDetail(${index})" ${vacancyDetails.length <= 1 ? 'style="display:none;"' : ''}>×</button>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        function addVacancyDetail() {
+            vacancyDetails.push('');
+            renderVacancyDetails();
+        }
+        
+        function removeVacancyDetail(index) {
+            if (vacancyDetails.length > 1) {
+                vacancyDetails.splice(index, 1);
+                renderVacancyDetails();
+            }
+        }
+        
+        function updateVacancyDetail(index, value) {
+            vacancyDetails[index] = value;
+        }
+        
+        // Выбор бейджа
+        document.querySelectorAll('.badge-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.badge-option').forEach(opt => opt.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedBadge = this.dataset.value;
+            });
+        });
+        
+        document.getElementById('vacancyForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const vacancies = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.VACANCIES) || '[]');
+            
+            const details = vacancyDetails.filter(d => d.trim() !== '');
+            
+            const vacancyData = {
+                id: currentVacancyId || Date.now(),
+                title: document.getElementById('vacancyTitle').value,
+                company: document.getElementById('vacancyCompany').value,
+                salary: document.getElementById('vacancySalary').value,
+                badge: selectedBadge || '',
+                details: details.length ? details : ['График: уточнять', 'Опыт: уточнять'],
+                apply_link: document.getElementById('vacancyLink').value || ''
+            };
+            
+            if (currentVacancyId) {
+                const index = vacancies.findIndex(v => v.id === currentVacancyId);
+                if (index !== -1) {
+                    vacancies[index] = vacancyData;
+                }
+            } else {
+                vacancies.push(vacancyData);
+            }
+            
+            localStorage.setItem(CONFIG.STORAGE_KEYS.VACANCIES, JSON.stringify(vacancies));
+            
+            resetVacancyForm();
+            loadVacanciesList();
+            
+            alert(currentVacancyId ? 'Вакансия обновлена!' : 'Вакансия опубликована!');
+        });
+        
+        function editVacancy(id) {
+            const vacancies = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.VACANCIES) || '[]');
+            const item = vacancies.find(v => v.id === id);
+            if (!item) return;
+            
+            currentVacancyId = id;
+            vacancyDetails = item.details && item.details.length > 0 ? [...item.details] : [''];
+            selectedBadge = item.badge || '';
+            
+            document.getElementById('vacancyFormTitle').innerHTML = '✏️ Редактировать вакансию';
+            document.getElementById('vacancySubmitBtn').textContent = 'Обновить';
+            document.getElementById('vacancyTitle').value = item.title;
+            document.getElementById('vacancyCompany').value = item.company;
+            document.getElementById('vacancySalary').value = item.salary;
+            document.getElementById('vacancyLink').value = item.apply_link || '';
+            
+            document.querySelectorAll('.badge-option').forEach(opt => {
+                opt.classList.remove('selected');
+                if (opt.dataset.value === item.badge) {
+                    opt.classList.add('selected');
+                }
+            });
+            
+            renderVacancyDetails();
+            
+            switchTab('vacancies');
+        }
+        
+        function resetVacancyForm() {
+            currentVacancyId = null;
+            vacancyDetails = ['', '', ''];
+            selectedBadge = '';
+            
+            document.getElementById('vacancyFormTitle').innerHTML = '➕ Добавить вакансию';
+            document.getElementById('vacancySubmitBtn').textContent = 'Опубликовать';
+            document.getElementById('vacancyForm').reset();
+            document.getElementById('vacancyLink').value = '';
+            
+            document.querySelectorAll('.badge-option').forEach(opt => {
+                opt.classList.remove('selected');
+                if (opt.dataset.value === '') {
+                    opt.classList.add('selected');
+                }
+            });
+            
+            renderVacancyDetails();
+        }
+        
+        // ========== РАБОТА С ОТЗЫВАМИ ==========
+
+// Загрузка отзывов
+function loadReviews() {
+    loadReviewsFromStorage();
+}
+
+// Загрузка отзывов из localStorage (с защитой от XSS)
+function loadReviewsFromStorage() {
+    try {
+        const reviews = JSON.parse(localStorage.getItem('reviews') || '[]');
+        allReviews = reviews;
+        updateReviewStats();
+        renderReviews();
+    } catch (e) {
+        console.error('Ошибка загрузки отзывов:', e);
+        allReviews = [];
+        updateReviewStats();
+        renderReviews();
+    }
+}
+
+// Обновление статистики
+function updateReviewStats() {
+    const pending = allReviews.filter(r => r.status === 'pending').length;
+    const approved = allReviews.filter(r => r.status === 'approved').length;
+    
+    const pendingEl = document.getElementById('pendingCount');
+    const approvedEl = document.getElementById('approvedCount');
+    
+    if (pendingEl) pendingEl.textContent = pending;
+    if (approvedEl) approvedEl.textContent = approved;
+}
+
+// Фильтрация отзывов
+function filterReviews(filter) {
+    currentFilter = filter;
+    
+    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+    
+    const btns = document.querySelectorAll('.filter-btn');
+    if (filter === 'pending' && btns[0]) {
+        btns[0].classList.add('active');
+    } else if (filter === 'approved' && btns[1]) {
+        btns[1].classList.add('active');
+    } else if (filter === 'all' && btns[2]) {
+        btns[2].classList.add('active');
+    }
+    
+    renderReviews();
+}
+
+// Экранирование HTML
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Отображение отзывов
+function renderReviews() {
+    const grid = document.getElementById('reviewsGrid');
+    if (!grid) return;
+    
+    let filtered = [];
+    
+    if (currentFilter === 'pending') {
+        filtered = allReviews.filter(r => r.status === 'pending');
+    } else if (currentFilter === 'approved') {
+        filtered = allReviews.filter(r => r.status === 'approved');
+    } else {
+        filtered = allReviews;
+    }
+    
+    if (filtered.length === 0) {
+        grid.innerHTML = '<div class="no-data">📭 Нет отзывов в этой категории</div>';
+        return;
+    }
+    
+    let html = '';
+    filtered.forEach((review, index) => {
+        // Создаем уникальный ID, если его нет
+        const reviewId = review.id || 'review_' + Date.now() + '_' + index;
+        
+        const stars = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
+        const categoryText = review.category === 'work-review' ? 'Отзыв о работе' : 'Предложение';
+        const categoryClass = review.category === 'work-review' ? 'work-review' : 'suggestion';
+        const statusClass = review.status === 'pending' ? 'pending' : 'approved';
+        
+        html += `
+            <div class="review-card ${statusClass}" data-id="${reviewId}">
+                <div class="review-header">
+                    <span class="review-author">${escapeHtml(review.name)}</span>
+                    <span class="review-rating">${stars}</span>
+                </div>
+                <span class="review-category ${categoryClass}">${categoryText}</span>
+                <div class="review-date">📅 ${review.date || 'Дата не указана'}</div>
+                <div class="review-text">${escapeHtml(review.text)}</div>
+                <div class="review-actions">
+                    <button class="review-view" onclick="viewReview('${reviewId}')">👁️ Просмотр</button>
+                    ${review.status === 'pending' ? `
+                        <button class="review-approve" onclick="approveReview('${reviewId}')">✅ Опубликовать</button>
+                        <button class="review-reject" onclick="rejectReview('${reviewId}')">❌ Отклонить</button>
+                    ` : `
+                        <button class="review-reject" onclick="deleteReview('${reviewId}')">🗑️ Удалить</button>
+                    `}
+                </div>
+            </div>
+        `;
+    });
+    
+    grid.innerHTML = html;
+}
+
+// Просмотр отзыва
+function viewReview(id) {
+    const review = allReviews.find(r => r.id == id);
+    if (!review) {
+        alert('Отзыв не найден');
+        return;
+    }
+    
+    const stars = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
+    const categoryText = review.category === 'work-review' ? 'Отзыв о работе' : 'Предложение';
+    
+    const modal = document.createElement('div');
+    modal.className = 'review-modal';
+    modal.innerHTML = `
+        <div class="review-modal-content">
+            <span class="review-modal-close" onclick="this.closest('.review-modal').remove()">&times;</span>
+            <h3 style="color: #003A70; margin-bottom: 20px;">Просмотр отзыва</h3>
+            
+            <div style="margin-bottom: 15px;">
+                <strong style="color: #666;">Автор:</strong>
+                <p style="margin: 5px 0; font-size: 18px; font-weight: 600;">${escapeHtml(review.name)}</p>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <strong style="color: #666;">Оценка:</strong>
+                <p style="margin: 5px 0; color: #FFD700; font-size: 20px;">${stars}</p>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <strong style="color: #666;">Категория:</strong>
+                <p style="margin: 5px 0;"><span class="review-category ${review.category}" style="display: inline-block;">${categoryText}</span></p>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <strong style="color: #666;">Дата:</strong>
+                <p style="margin: 5px 0;">${review.date || 'Дата не указана'}</p>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <strong style="color: #666;">Текст:</strong>
+                <p style="margin: 10px 0; padding: 15px; background: #f5f5f5; border-radius: 8px; line-height: 1.6;">${escapeHtml(review.text)}</p>
+            </div>
+            
+            <div style="display: flex; gap: 10px;">
+                <button style="flex: 1; padding: 10px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer;" onclick="this.closest('.review-modal').remove()">Закрыть</button>
+                ${review.status === 'pending' ? `
+                    <button style="flex: 1; padding: 10px; background: #00A650; color: white; border: none; border-radius: 6px; cursor: pointer;" onclick="approveReview('${review.id}'); this.closest('.review-modal').remove()">Опубликовать</button>
+                    <button style="flex: 1; padding: 10px; background: #E31B23; color: white; border: none; border-radius: 6px; cursor: pointer;" onclick="rejectReview('${review.id}'); this.closest('.review-modal').remove()">Отклонить</button>
+                ` : ''}
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+// Одобрение отзыва
+function approveReview(id) {
+    const index = allReviews.findIndex(r => r.id == id);
+    if (index !== -1) {
+        allReviews[index].status = 'approved';
+        localStorage.setItem('reviews', JSON.stringify(allReviews));
+        loadReviewsFromStorage(); // Обновляем сразу
+        // Уведомляем другие вкладки
+        localStorage.setItem('review_updated', Date.now().toString());
+    }
+}
+
+// Отклонение отзыва
+function rejectReview(id) {
+    if (!confirm('Вы уверены, что хотите отклонить этот отзыв?')) return;
+    
+    const index = allReviews.findIndex(r => r.id == id);
+    if (index !== -1) {
+        allReviews.splice(index, 1);
+        localStorage.setItem('reviews', JSON.stringify(allReviews));
+        loadReviewsFromStorage(); // Обновляем сразу
+        // Уведомляем другие вкладки
+        localStorage.setItem('review_updated', Date.now().toString());
+    }
+}
+
+// Удаление отзыва
+function deleteReview(id) {
+    if (!confirm('Удалить этот отзыв?')) return;
+    
+    const index = allReviews.findIndex(r => r.id == id);
+    if (index !== -1) {
+        allReviews.splice(index, 1);
+        localStorage.setItem('reviews', JSON.stringify(allReviews));
+        loadReviewsFromStorage(); // Обновляем сразу
+        // Уведомляем другие вкладки
+        localStorage.setItem('review_updated', Date.now().toString());
+    }
+}
+
+// Глобальная функция для обновления при добавлении отзыва
+window.onReviewAdded = function() {
+    loadReviewsFromStorage();
+};
+
+// Слушаем изменения в localStorage (для синхронизации между вкладками)
+window.addEventListener('storage', function(e) {
+    if (e.key === 'reviews' || e.key === 'review_updated') {
+        loadReviewsFromStorage();
+    }
+});
+    </script>
+</body>
+</html>
