@@ -13,6 +13,21 @@ let deleteType = null;
 let allReviews = [];
 let currentFilter = 'pending';
 
+// Проверка что формы существуют
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Admin.js загружен');
+    console.log('News form:', document.getElementById('newsForm'));
+    console.log('Vacancy form:', document.getElementById('vacancyForm'));
+    
+    if (localStorage.getItem(CONFIG.STORAGE_KEYS.AUTH) === 'true') {
+        document.getElementById('loginForm').style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'block';
+        loadNewsList();
+        loadVacanciesList();
+        loadReviews();
+        renderVacancyDetails();
+    }
+});
 // ========== АВТОРИЗАЦИЯ ==========
 function login() {
     const pass = document.getElementById('password').value;
@@ -581,6 +596,7 @@ function resetNewsImage() {
 // ========== СОХРАНЕНИЕ ==========
 document.getElementById('newsForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
+    console.log('Форма новости отправлена!');
     
     const newsData = {
         title: document.getElementById('newsTitle').value,
@@ -633,7 +649,7 @@ document.getElementById('newsForm')?.addEventListener('submit', async function(e
 
 document.getElementById('vacancyForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
-    
+    console.log('Форма вакансии отправлена!');
     const details = vacancyDetails.filter(d => d.trim() !== '');
     
     const vacancyData = {
