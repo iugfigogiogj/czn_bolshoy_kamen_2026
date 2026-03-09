@@ -174,13 +174,30 @@ async function loadVacanciesList() {
         let html = '';
         vacancies.forEach(item => {
             const details = item.details ? JSON.parse(item.details) : [];
+            let badgeClass = '';
             let badgeText = '';
+            
             switch(item.badge) {
-                case 'hot': badgeText = '🔥 Срочно'; break;
-                case 'attractive': badgeText = '💰 Высокая ЗП'; break;
-                case 'flexible': badgeText = '⏰ Гибкий график'; break;
-                case 'housing': badgeText = '🏠 Жилье'; break;
-                case 'parttime': badgeText = '⚡ Подработка'; break;
+                case 'hot':
+                    badgeClass = 'badge-hot';
+                    badgeText = '🔥 Срочно';
+                    break;
+                case 'attractive':
+                    badgeClass = 'badge-attractive';
+                    badgeText = '💰 Высокая ЗП';
+                    break;
+                case 'flexible':
+                    badgeClass = 'badge-flexible';
+                    badgeText = '⏰ Гибкий график';
+                    break;
+                case 'housing':
+                    badgeClass = 'badge-housing';
+                    badgeText = '🏠 Жилье';
+                    break;
+                case 'parttime':
+                    badgeClass = 'badge-parttime';
+                    badgeText = '⚡ Подработка';
+                    break;
             }
 
             html += `
@@ -190,7 +207,7 @@ async function loadVacanciesList() {
                         <div class="item-meta">
                             <span>🏢 ${item.company}</span>
                             <span>💰 ${item.salary}</span>
-                            ${badgeText ? `<span>${badgeText}</span>` : ''}
+                            ${badgeText ? `<span class="${badgeClass}" style="display:inline-block; padding:2px 8px; border-radius:12px; font-size:11px;">${badgeText}</span>` : ''}
                             ${item.apply_link ? '<span>🔗 есть ссылка</span>' : ''}
                         </div>
                         <p>${details.length} условий</p>
@@ -209,7 +226,6 @@ async function loadVacanciesList() {
         console.error(error);
     }
 }
-
 async function editVacancy(id) {
     try {
         const vacancies = await API.getVacancies();
