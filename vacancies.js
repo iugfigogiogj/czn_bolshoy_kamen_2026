@@ -38,6 +38,9 @@ async function loadVacancies() {
                     badgeClass = 'badge-parttime';
                     badgeText = '⚡ Подработка';
                     break;
+                default:
+                    badgeClass = '';
+                    badgeText = '';
             }
             
             const details = vacancy.details ? JSON.parse(vacancy.details) : [];
