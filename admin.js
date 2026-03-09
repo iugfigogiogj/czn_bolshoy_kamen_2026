@@ -592,6 +592,28 @@ document.getElementById('newsForm')?.addEventListener('submit', async function(e
         tags: newsTags
     };
 
+    console.log('Отправляю данные:', newsData); // 👈 Добавь это
+
+    try {
+        let result;
+        if (currentNewsId) {
+            result = await API.updateNews(currentNewsId, newsData);
+            console.log('Новость обновлена:', result);
+            alert('Новость обновлена!');
+        } else {
+            result = await API.createNews(newsData);
+            console.log('Новость создана:', result);
+            alert('Новость опубликована!');
+        }
+        resetNewsForm();
+        await loadNewsList();
+        switchTab('news');
+    } catch (error) {
+        console.error('Полная ошибка:', error);
+        alert('Ошибка сохранения новости: ' + error.message);
+    }
+});
+
     try {
         if (currentNewsId) {
             await API.updateNews(currentNewsId, newsData);
