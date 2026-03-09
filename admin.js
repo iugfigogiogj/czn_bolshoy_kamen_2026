@@ -608,7 +608,7 @@ document.getElementById('newsForm')?.addEventListener('submit', async function(e
         tags: newsTags
     };
 
-    console.log('Отправляю данные:', newsData); // 👈 Добавь это
+    console.log('Отправляю данные:', newsData);
 
     try {
         let result;
@@ -630,26 +630,10 @@ document.getElementById('newsForm')?.addEventListener('submit', async function(e
     }
 });
 
-    try {
-        if (currentNewsId) {
-            await API.updateNews(currentNewsId, newsData);
-            alert('Новость обновлена!');
-        } else {
-            await API.createNews(newsData);
-            alert('Новость опубликована!');
-        }
-        resetNewsForm();
-        await loadNewsList();
-        switchTab('news');
-    } catch (error) {
-        alert('Ошибка сохранения новости: ' + error.message);
-        console.error(error);
-    }
-});
-
 document.getElementById('vacancyForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
     console.log('Форма вакансии отправлена!');
+    
     const details = vacancyDetails.filter(d => d.trim() !== '');
     
     const vacancyData = {
@@ -660,6 +644,8 @@ document.getElementById('vacancyForm')?.addEventListener('submit', async functio
         details: details,
         apply_link: document.getElementById('vacancyLink').value || ''
     };
+
+    console.log('Отправляю данные:', vacancyData);
 
     try {
         if (currentVacancyId) {
