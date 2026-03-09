@@ -13,21 +13,6 @@ let deleteType = null;
 let allReviews = [];
 let currentFilter = 'pending';
 
-// Проверка что формы существуют
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Admin.js загружен');
-    console.log('News form:', document.getElementById('newsForm'));
-    console.log('Vacancy form:', document.getElementById('vacancyForm'));
-    
-    if (localStorage.getItem(CONFIG.STORAGE_KEYS.AUTH) === 'true') {
-        document.getElementById('loginForm').style.display = 'none';
-        document.getElementById('adminPanel').style.display = 'block';
-        loadNewsList();
-        loadVacanciesList();
-        loadReviews();
-        renderVacancyDetails();
-    }
-});
 // ========== АВТОРИЗАЦИЯ ==========
 function login() {
     const pass = document.getElementById('password').value;
@@ -49,18 +34,6 @@ function logout() {
     localStorage.removeItem(CONFIG.STORAGE_KEYS.AUTH);
     location.reload();
 }
-
-// Проверка авторизации при загрузке
-document.addEventListener('DOMContentLoaded', function() {
-    if (localStorage.getItem(CONFIG.STORAGE_KEYS.AUTH) === 'true') {
-        document.getElementById('loginForm').style.display = 'none';
-        document.getElementById('adminPanel').style.display = 'block';
-        loadNewsList();
-        loadVacanciesList();
-        loadReviews();
-        renderVacancyDetails();
-    }
-});
 
 // ========== ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК ==========
 function switchTab(tab) {
@@ -593,75 +566,125 @@ function resetNewsImage() {
     newsImageData = null;
 }
 
-// ========== СОХРАНЕНИЕ ==========
-document.getElementById('newsForm')?.addEventListener('submit', async function(e) {
-    e.preventDefault();
-    console.log('Форма новости отправлена!');
+// ========== ГЛАВНЫЙ ЗАПУСК ПРИ ЗАГРУЗКЕ ==========
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Admin.js загружен и запущен');
     
-    const newsData = {
-        title: document.getElementById('newsTitle').value,
-        date: document.getElementById('newsDate').value,
-        image: newsImageData || document.getElementById('newsImage').value || '',
-        preview: document.getElementById('newsPreview').value,
-        details: document.getElementById('newsDetails').value || '',
-        content: document.getElementById('newsContent').value || '',
-        tags: newsTags
-    };
-
-    console.log('Отправляю данные:', newsData);
-
-    try {
-        let result;
-        if (currentNewsId) {
-            result = await API.updateNews(currentNewsId, newsData);
-            console.log('Новость обновлена:', result);
-            alert('Новость обновлена!');
-        } else {
-            result = await API.createNews(newsData);
-            console.log('Новость создана:', result);
-            alert('Новость опубликована!');
-        }
-        resetNewsForm();
-        await loadNewsList();
-        switchTab('news');
-    } catch (error) {
-        console.error('Полная ошибка:', error);
-        alert('Ошибка сохранения новости: ' + error.message);
+    // Проверка авторизации
+    if (localStorage.getItem(CONFIG.STORAGE_KEYS.AUTH) === 'true') {
+        console.log('Пользователь авторизован');
+        document.getElementById('loginForm').style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'block';
+        loadNewsList();
+        loadVacanciesList();
+        loadReviews();
+        renderVacancyDetails();
+    } else {
+        console.log('Пользователь не авторизован');
     }
-});
-
-document.getElementById('vacancyForm')?.addEventListener('submit', async function(e) {
-    e.preventDefault();
-    console.log('Форма вакансии отправлена!');
     
-    const details = vacancyDetails.filter(d => d.trim() !== '');
-    
-    const vacancyData = {
-        title: document.getElementById('vacancyTitle').value,
-        company: document.getElementById('vacancyCompany').value,
-        salary: document.getElementById('vacancySalary').value,
-        badge: selectedBadge || '',
-        details: details,
-        apply_link: document.getElementById('vacancyLink').value || ''
-    };
+    // Навешиваем обработчики на формы
+    const newsForm = document.getElementById('newsForm');
+    if (newsForm) {
+        console.log('✅ Найден newsForm, навешиваю обработчик');
+        newsForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            console.log('📝 Форма новости отправлена!');
+            
+            const newsData = {
+                title: document.getElementById('newsTitle').value,
+                date: document.getElementById('newsDate').value,
+                image: newsImageData || document.getElementById('newsImage').value || '',
+                preview: document.getElementById('newsPreview').value,
+                details: document.getElementById('newsDetails').value || '',
+                content: document.getElementById('newsContent').value || '',
+                tags: newsTags
+            };
 
-    console.log('Отправляю данные:', vacancyData);
+            console.log('Отправляю данные:', newsData);
 
-    try {
-        if (currentVacancyId) {
-            await API.updateVacancy(currentVacancyId, vacancyData);
-            alert('Вакансия обновлена!');
-        } else {
-            await API.createVacancy(vacancyData);
-            alert('Вакансия опубликована!');
-        }
-        resetVacancyForm();
-        await loadVacanciesList();
-        switchTab('vacancies');
-    } catch (error) {
-        alert('Ошибка сохранения вакансии: ' + error.message);
-        console.error(error);
+            try {
+                let result;
+                if (currentNewsId) {
+                    result = await API.updateNews(currentNewsId, newsData);
+                    console.log('Новость обновлена:', result);
+                    alert('Новость обновлена!');
+                } else {
+                    result = await API.createNews(newsData);
+                    console.log('Новость создана:', result);
+                    alert('Новость опубликована!');
+                }
+                resetNewsForm();
+                await loadNewsList();
+                switchTab('news');
+            } catch (error) {
+                console.error('❌ Полная ошибка:', error);
+                alert('Ошибка сохранения новости: ' + error.message);
+            }
+        });
+    } else {
+        console.error('❌ newsForm не найден!');
     }
+
+    const vacancyForm = document.getElementById('vacancyForm');
+    if (vacancyForm) {
+        console.log('✅ Найден vacancyForm, навешиваю обработчик');
+        vacancyForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            console.log('📝 Форма вакансии отправлена!');
+            
+            const details = vacancyDetails.filter(d => d.trim() !== '');
+            
+            const vacancyData = {
+                title: document.getElementById('vacancyTitle').value,
+                company: document.getElementById('vacancyCompany').value,
+                salary: document.getElementById('vacancySalary').value,
+                badge: selectedBadge || '',
+                details: details,
+                apply_link: document.getElementById('vacancyLink').value || ''
+            };
+
+            console.log('Отправляю данные:', vacancyData);
+
+            try {
+                if (currentVacancyId) {
+                    await API.updateVacancy(currentVacancyId, vacancyData);
+                    alert('Вакансия обновлена!');
+                } else {
+                    await API.createVacancy(vacancyData);
+                    alert('Вакансия опубликована!');
+                }
+                resetVacancyForm();
+                await loadVacanciesList();
+                switchTab('vacancies');
+            } catch (error) {
+                console.error('❌ Ошибка:', error);
+                alert('Ошибка сохранения вакансии: ' + error.message);
+            }
+        });
+    } else {
+        console.error('❌ vacancyForm не найден!');
+    }
+    
+    // Обработчики удаления
+    const confirmYes = document.getElementById('confirmYes');
+    const confirmNo = document.getElementById('confirmNo');
+    const confirmModal = document.getElementById('confirmModal');
+
+    if (confirmYes) {
+        console.log('✅ Найден confirmYes');
+        confirmYes.onclick = deleteItem;
+    }
+    if (confirmNo) {
+        console.log('✅ Найден confirmNo');
+        confirmNo.onclick = closeModal;
+    }
+
+    window.onclick = function(e) {
+        if (e.target === confirmModal) {
+            closeModal();
+        }
+    };
 });
 
 // ========== УДАЛЕНИЕ ==========
@@ -694,19 +717,3 @@ function closeModal() {
     deleteId = null;
     deleteType = null;
 }
-
-// Назначаем обработчики после загрузки DOM
-document.addEventListener('DOMContentLoaded', function() {
-    const confirmYes = document.getElementById('confirmYes');
-    const confirmNo = document.getElementById('confirmNo');
-    const confirmModal = document.getElementById('confirmModal');
-
-    if (confirmYes) confirmYes.onclick = deleteItem;
-    if (confirmNo) confirmNo.onclick = closeModal;
-
-    window.onclick = function(e) {
-        if (e.target === confirmModal) {
-            closeModal();
-        }
-    };
-});
