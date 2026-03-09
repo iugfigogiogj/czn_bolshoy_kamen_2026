@@ -152,7 +152,66 @@ function resetNewsForm() {
     newsImageData = null;
     document.getElementById('newsFormTitle').innerHTML = '➕ Добавить новость';
     document.getElementById('newsSubmitBtn').textContent = 'Опубликовать';
-    document.getElementById('newsForm').reset();
+    document.getElementById('newsForm')?.addEventListener('submit', async function(e) {
+    e.preventDefault(); // ЭТО САМОЕ ГЛАВНОЕ!
+    
+    const newsData = {
+        title: document.getElementById('newsTitle').value,
+        date: document.getElementById('newsDate').value,
+        image: newsImageData || document.getElementById('newsImage').value || '',
+        preview: document.getElementById('newsPreview').value,
+        details: document.getElementById('newsDetails').value || '',
+        content: document.getElementById('newsContent').value || '',
+        tags: newsTags
+    };
+
+    try {
+        if (currentNewsId) {
+            await API.updateNews(currentNewsId, newsData);
+            alert('Новость обновлена!');
+        } else {
+            await API.createNews(newsData);
+            alert('Новость опубликована!');
+        }
+        resetNewsForm();
+        await loadNewsList(); // Добавил await
+        switchTab('news'); // Явно переключаемся на вкладку новостей
+    } catch (error) {
+        alert('Ошибка сохранения новости: ' + error.message);
+        console.error(error);
+    }
+});
+
+document.getElementById('vacancyForm')?.addEventListener('submit', async function(e) {
+    e.preventDefault(); // ЭТО САМОЕ ГЛАВНОЕ!
+    
+    const details = vacancyDetails.filter(d => d.trim() !== '');
+    
+    const vacancyData = {
+        title: document.getElementById('vacancyTitle').value,
+        company: document.getElementById('vacancyCompany').value,
+        salary: document.getElementById('vacancySalary').value,
+        badge: selectedBadge || '',
+        details: details,
+        apply_link: document.getElementById('vacancyLink').value || ''
+    };
+
+    try {
+        if (currentVacancyId) {
+            await API.updateVacancy(currentVacancyId, vacancyData);
+            alert('Вакансия обновлена!');
+        } else {
+            await API.createVacancy(vacancyData);
+            alert('Вакансия опубликована!');
+        }
+        resetVacancyForm();
+        await loadVacanciesList(); // Добавил await
+        switchTab('vacancies'); // Явно переключаемся на вкладку вакансий
+    } catch (error) {
+        alert('Ошибка сохранения вакансии: ' + error.message);
+        console.error(error);
+    }
+});
     document.getElementById('newsImagePreviewContainer').classList.remove('show');
     document.getElementById('newsFileInput').value = '';
     renderNewsTags();
