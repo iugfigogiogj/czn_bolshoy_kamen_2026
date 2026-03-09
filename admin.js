@@ -1,4 +1,4 @@
-// ========== АДМИН-ПАНЕЛЬ ==========
+// ========== АДМИН-ПАНЕЛЬ (ТОЛЬКО СЕРВЕР) ==========
 
 let currentNewsId = null;
 let currentVacancyId = null;
@@ -15,13 +15,8 @@ let currentFilter = 'pending';
 
 // ========== АВТОРИЗАЦИЯ ==========
 function login() {
-    console.log('Функция login вызвана');
     const pass = document.getElementById('password').value;
-    console.log('Введенный пароль:', pass);
-    console.log('Правильный пароль:', CONFIG.ADMIN_PASSWORD);
-    
     if (pass === CONFIG.ADMIN_PASSWORD) {
-        console.log('Пароль верный');
         localStorage.setItem(CONFIG.STORAGE_KEYS.AUTH, 'true');
         document.getElementById('loginForm').style.display = 'none';
         document.getElementById('adminPanel').style.display = 'block';
@@ -31,7 +26,6 @@ function login() {
         renderVacancyDetails();
         document.getElementById('loginError').style.display = 'none';
     } else {
-        console.log('Пароль неверный');
         document.getElementById('loginError').style.display = 'block';
     }
 }
@@ -43,19 +37,13 @@ function logout() {
 
 // Проверка авторизации при загрузке
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Admin.js загружен');
-    console.log('CONFIG:', CONFIG);
-    
     if (localStorage.getItem(CONFIG.STORAGE_KEYS.AUTH) === 'true') {
-        console.log('Пользователь авторизован');
         document.getElementById('loginForm').style.display = 'none';
         document.getElementById('adminPanel').style.display = 'block';
         loadNewsList();
         loadVacanciesList();
         loadReviews();
         renderVacancyDetails();
-    } else {
-        console.log('Пользователь не авторизован');
     }
 });
 
@@ -428,6 +416,49 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// ========== ЗАГРУЗКА ФОТО ==========
+function handleNewsFileSelect(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        
+        if (file.size > 10 * 1024 * 1024) {
+            alert('Файл слишком большой. Максимальный размер 10 МБ');
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            newsImageData = e.target.result;
+            
+            const preview = document.getElementById('newsImagePreview');
+            preview.src = e.target.result;
+            
+            const size = (file.size / 1024).toFixed(1);
+            document.getElementById('newsImageSize').textContent = size + ' KB';
+            
+            document.getElementById('newsImagePreviewContainer').classList.add('show');
+            document.getElementById('newsImage').value = '';
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function previewNewsImageUrl(url) {
+    if (url) {
+        newsImageData = url;
+        document.getElementById('newsImagePreview').src = url;
+        document.getElementById('newsImagePreviewContainer').classList.add('show');
+        document.getElementById('newsImageSize').textContent = 'URL фото';
+    }
+}
+
+function resetNewsImage() {
+    document.getElementById('newsFileInput').value = '';
+    document.getElementById('newsImagePreviewContainer').classList.remove('show');
+    document.getElementById('newsImage').value = '';
+    newsImageData = null;
+}
+
 // ========== СОХРАНЕНИЕ ==========
 document.getElementById('newsForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -435,7 +466,7 @@ document.getElementById('newsForm')?.addEventListener('submit', async function(e
     const newsData = {
         title: document.getElementById('newsTitle').value,
         date: document.getElementById('newsDate').value,
-        image: document.getElementById('newsImage').value || '',
+        image: newsImageData || document.getElementById('newsImage').value || '',
         preview: document.getElementById('newsPreview').value,
         details: document.getElementById('newsDetails').value || '',
         content: document.getElementById('newsContent').value || '',
@@ -453,7 +484,7 @@ document.getElementById('newsForm')?.addEventListener('submit', async function(e
         resetNewsForm();
         loadNewsList();
     } catch (error) {
-        alert('Ошибка сохранения новости');
+        alert('Ошибка сохранения новости: ' + error.message);
         console.error(error);
     }
 });
@@ -483,7 +514,7 @@ document.getElementById('vacancyForm')?.addEventListener('submit', async functio
         resetVacancyForm();
         loadVacanciesList();
     } catch (error) {
-        alert('Ошибка сохранения вакансии');
+        alert('Ошибка сохранения вакансии: ' + error.message);
         console.error(error);
     }
 });
@@ -506,27 +537,31 @@ async function deleteItem() {
             await API.deleteVacancy(deleteId);
             loadVacanciesList();
         }
+        closeModal();
     } catch (error) {
-        alert('Ошибка удаления');
+        alert('Ошибка удаления: ' + error.message);
         console.error(error);
     }
-    
+}
+
+function closeModal() {
     document.getElementById('confirmModal').style.display = 'none';
     deleteId = null;
     deleteType = null;
 }
 
-document.getElementById('confirmYes').onclick = deleteItem;
-document.getElementById('confirmNo').onclick = function() {
-    document.getElementById('confirmModal').style.display = 'none';
-    deleteId = null;
-    deleteType = null;
-};
-
-window.onclick = function(e) {
-    if (e.target === document.getElementById('confirmModal')) {
-        document.getElementById('confirmModal').style.display = 'none';
-        deleteId = null;
-        deleteType = null;
-    }
-};
+// Назначаем обработчики после загрузки DOM
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmYes = document.getElementById('confirmYes');
+    const confirmNo = document.getElementById('confirmNo');
+    const confirmModal = document.getElementById('confirmModal');
+    
+    if (confirmYes) confirmYes.onclick = deleteItem;
+    if (confirmNo) confirmNo.onclick = closeModal;
+    
+    window.onclick = function(e) {
+        if (e.target === confirmModal) {
+            closeModal();
+        }
+    };
+});
