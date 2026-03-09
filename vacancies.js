@@ -63,5 +63,20 @@ async function loadVacancies() {
         console.error('Ошибка загрузки вакансий:', error);
     }
 }
-document.addEventListener('DOMContentLoaded', loadVacancies);
 
+async function applyForVacancy(vacancyId) {
+    try {
+        const vacancy = await API.getVacancyById(vacancyId);
+        
+        if (vacancy) {
+            if (vacancy.apply_link && vacancy.apply_link.trim() !== '') {
+                window.open(vacancy.apply_link, '_blank');
+            } else {
+                alert('Ссылка на вакансию не указана. Обратитесь в центр занятости по телефону 8 (42335) 4-08-34');
+            }
+        }
+    } catch (error) {
+        console.error('Ошибка при отклике:', error);
+    }
+}
+document.addEventListener('DOMContentLoaded', loadVacancies);
