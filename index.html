@@ -1903,18 +1903,44 @@
                 });
             }
         });
-        // Автоматическое обновление каждые 30 секунд
-setInterval(() => {
-    if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
-        loadNews();
-        loadVacancies();
-        loadPublishedReviews();
+// ========== АВТОМАТИЧЕСКОЕ ОБНОВЛЕНИЕ ==========
+
+// Функция для обновления всех данных
+async function refreshAllData() {
+    console.log('🔄 Обновление данных...');
+    try {
+        if (typeof loadNews === 'function') await loadNews();
+        if (typeof loadVacancies === 'function') await loadVacancies();
+        if (typeof loadPublishedReviews === 'function') await loadPublishedReviews();
+        console.log('✅ Данные обновлены');
+    } catch (error) {
+        console.error('Ошибка обновления:', error);
     }
-}, 30000);
+}
+
+// Обновление каждые 30 секунд
+setInterval(refreshAllData, 30000);
+
+// Слушаем изменения от админки
+window.addEventListener('storage', function(e) {
+    if (e.key === 'content_updated') {
+        console.log('📢 Получен сигнал обновления от админки');
+        refreshAllData();
+    }
+});
+
+// Обновляем при возвращении на вкладку
+document.addEventListener('visibilitychange', function() {
+    if (!document.hidden) {
+        console.log('👁️ Вкладка активна, обновляем...');
+        refreshAllData();
+    }
+});
     </script>
 </body>
 
 </html>
+
 
 
 
