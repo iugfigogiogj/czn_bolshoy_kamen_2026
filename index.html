@@ -1903,10 +1903,19 @@
                 });
             }
         });
+        // Автоматическое обновление каждые 30 секунд
+setInterval(() => {
+    if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
+        loadNews();
+        loadVacancies();
+        loadPublishedReviews();
+    }
+}, 30000);
     </script>
 </body>
 
 </html>
+
 
 
 
