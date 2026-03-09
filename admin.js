@@ -361,6 +361,7 @@ async function approveReview(id) {
     try {
         await API.approveReview(id);
         loadReviews();
+        localStorage.setItem('content_updated', Date.now().toString()); // Сигнал на главную
     } catch (error) {
         alert('Ошибка при одобрении отзыва');
         console.error(error);
@@ -373,6 +374,7 @@ async function rejectReview(id) {
     try {
         await API.rejectReview(id);
         loadReviews();
+        localStorage.setItem('content_updated', Date.now().toString()); // Сигнал на главную
     } catch (error) {
         alert('Ошибка при отклонении отзыва');
         console.error(error);
@@ -385,8 +387,9 @@ async function deleteReview(id) {
     try {
         await API.deleteReview(id);
         loadReviews();
+        localStorage.setItem('content_updated', Date.now().toString()); // Сигнал на главную
     } catch (error) {
-        alert('Ошибка при удалении отзыва');
+        alert('Ошибка при удалении отзыва: ' + error.message);
         console.error(error);
     }
 }
@@ -616,6 +619,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 resetNewsForm();
                 await loadNewsList();
+                localStorage.setItem('content_updated', Date.now().toString()); // Сигнал на главную
                 switchTab('news');
             } catch (error) {
                 console.error('❌ Полная ошибка:', error);
@@ -656,6 +660,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 resetVacancyForm();
                 await loadVacanciesList();
+                localStorage.setItem('content_updated', Date.now().toString()); // Сигнал на главную
                 switchTab('vacancies');
             } catch (error) {
                 console.error('❌ Ошибка:', error);
@@ -705,6 +710,7 @@ async function deleteItem() {
             await API.deleteVacancy(deleteId);
             loadVacanciesList();
         }
+        localStorage.setItem('content_updated', Date.now().toString()); // Сигнал на главную
         closeModal();
     } catch (error) {
         alert('Ошибка удаления: ' + error.message);
