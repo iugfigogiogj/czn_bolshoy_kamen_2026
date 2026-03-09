@@ -55,14 +55,16 @@ function switchTab(tab) {
     if (tab === 'news') {
         document.querySelector('.tab-btn.news-tab').classList.add('active');
         document.getElementById('tab-news').classList.add('active');
+        loadNewsList();
     } else if (tab === 'vacancies') {
         document.querySelector('.tab-btn.vacancies-tab').classList.add('active');
         document.getElementById('tab-vacancies').classList.add('active');
+        loadVacanciesList();
         renderVacancyDetails();
     } else if (tab === 'reviews') {
         document.querySelector('.tab-btn.reviews-tab').classList.add('active');
         document.getElementById('tab-reviews').classList.add('active');
-        renderReviews();
+        loadReviews();
     }
 }
 
@@ -152,66 +154,7 @@ function resetNewsForm() {
     newsImageData = null;
     document.getElementById('newsFormTitle').innerHTML = '➕ Добавить новость';
     document.getElementById('newsSubmitBtn').textContent = 'Опубликовать';
-    document.getElementById('newsForm')?.addEventListener('submit', async function(e) {
-    e.preventDefault(); // ЭТО САМОЕ ГЛАВНОЕ!
-    
-    const newsData = {
-        title: document.getElementById('newsTitle').value,
-        date: document.getElementById('newsDate').value,
-        image: newsImageData || document.getElementById('newsImage').value || '',
-        preview: document.getElementById('newsPreview').value,
-        details: document.getElementById('newsDetails').value || '',
-        content: document.getElementById('newsContent').value || '',
-        tags: newsTags
-    };
-
-    try {
-        if (currentNewsId) {
-            await API.updateNews(currentNewsId, newsData);
-            alert('Новость обновлена!');
-        } else {
-            await API.createNews(newsData);
-            alert('Новость опубликована!');
-        }
-        resetNewsForm();
-        await loadNewsList(); // Добавил await
-        switchTab('news'); // Явно переключаемся на вкладку новостей
-    } catch (error) {
-        alert('Ошибка сохранения новости: ' + error.message);
-        console.error(error);
-    }
-});
-
-document.getElementById('vacancyForm')?.addEventListener('submit', async function(e) {
-    e.preventDefault(); // ЭТО САМОЕ ГЛАВНОЕ!
-    
-    const details = vacancyDetails.filter(d => d.trim() !== '');
-    
-    const vacancyData = {
-        title: document.getElementById('vacancyTitle').value,
-        company: document.getElementById('vacancyCompany').value,
-        salary: document.getElementById('vacancySalary').value,
-        badge: selectedBadge || '',
-        details: details,
-        apply_link: document.getElementById('vacancyLink').value || ''
-    };
-
-    try {
-        if (currentVacancyId) {
-            await API.updateVacancy(currentVacancyId, vacancyData);
-            alert('Вакансия обновлена!');
-        } else {
-            await API.createVacancy(vacancyData);
-            alert('Вакансия опубликована!');
-        }
-        resetVacancyForm();
-        await loadVacanciesList(); // Добавил await
-        switchTab('vacancies'); // Явно переключаемся на вкладку вакансий
-    } catch (error) {
-        alert('Ошибка сохранения вакансии: ' + error.message);
-        console.error(error);
-    }
-});
+    document.getElementById('newsForm').reset();
     document.getElementById('newsImagePreviewContainer').classList.remove('show');
     document.getElementById('newsFileInput').value = '';
     renderNewsTags();
@@ -285,6 +228,7 @@ async function loadVacanciesList() {
         console.error(error);
     }
 }
+
 async function editVacancy(id) {
     try {
         const vacancies = await API.getVacancies();
@@ -339,12 +283,10 @@ function resetVacancyForm() {
 // ========== ОТЗЫВЫ ==========
 async function loadReviews() {
     try {
-        // Загружаем и ожидающие, и опубликованные
         const [pending, approved] = await Promise.all([
             API.getPendingReviews(),
             API.getPublishedReviews()
         ]);
-        // Сохраняем все отзывы в одном массиве
         allReviews = [...pending, ...approved];
         updateReviewStats();
         renderReviews();
@@ -363,7 +305,6 @@ function updateReviewStats() {
     if (approvedEl) approvedEl.textContent = approvedCount;
 }
 
-// ========== ФИЛЬТРАЦИЯ ОТЗЫВОВ ==========
 function filterReviews(filter) {
     currentFilter = filter;
 
@@ -397,7 +338,7 @@ function renderReviews() {
     }
 
     let html = '';
-    filteredReviews.forEach((review, index) => {
+    filteredReviews.forEach((review) => {
         const reviewId = review.id;
         const stars = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
         const categoryText = review.category === 'work-review' ? 'Отзыв о работе' : 'Предложение';
@@ -640,7 +581,7 @@ function resetNewsImage() {
 // ========== СОХРАНЕНИЕ ==========
 document.getElementById('newsForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
-
+    
     const newsData = {
         title: document.getElementById('newsTitle').value,
         date: document.getElementById('newsDate').value,
@@ -660,7 +601,8 @@ document.getElementById('newsForm')?.addEventListener('submit', async function(e
             alert('Новость опубликована!');
         }
         resetNewsForm();
-        loadNewsList();
+        await loadNewsList();
+        switchTab('news');
     } catch (error) {
         alert('Ошибка сохранения новости: ' + error.message);
         console.error(error);
@@ -669,9 +611,9 @@ document.getElementById('newsForm')?.addEventListener('submit', async function(e
 
 document.getElementById('vacancyForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
-
+    
     const details = vacancyDetails.filter(d => d.trim() !== '');
-
+    
     const vacancyData = {
         title: document.getElementById('vacancyTitle').value,
         company: document.getElementById('vacancyCompany').value,
@@ -690,7 +632,8 @@ document.getElementById('vacancyForm')?.addEventListener('submit', async functio
             alert('Вакансия опубликована!');
         }
         resetVacancyForm();
-        loadVacanciesList();
+        await loadVacanciesList();
+        switchTab('vacancies');
     } catch (error) {
         alert('Ошибка сохранения вакансии: ' + error.message);
         console.error(error);
