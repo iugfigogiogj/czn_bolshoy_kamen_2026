@@ -5,13 +5,32 @@ let currentVacancyId = null;
 let newsTags = [];
 let newsImageData = null;
 let vacancyDetails = ['', '', ''];
-let selectedBadge = '';
+let selectedBadge = '';  // ← ЭТО ВАЖНО!
 let deleteId = null;
 let deleteType = null;
 
 // Для отзывов
 let allReviews = [];
 let currentFilter = 'pending';
+
+// ========== ИНИЦИАЛИЗАЦИЯ ВЫБОРА БЕЙДЖА ==========
+function initBadgeSelector() {
+    const options = document.querySelectorAll('.badge-option');
+    console.log('🎯 Найдено бейджей:', options.length);
+    
+    options.forEach(option => {
+        option.addEventListener('click', function() {
+            // Убираем выделение со всех
+            document.querySelectorAll('.badge-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            // Выделяем текущий
+            this.classList.add('selected');
+            selectedBadge = this.dataset.value;
+            console.log('✅ Выбран бейдж:', selectedBadge, 'значение:', this.dataset.value);
+        });
+    });
+}
 
 // ========== АВТОРИЗАЦИЯ ==========
 function login() {
@@ -573,15 +592,8 @@ function resetNewsImage() {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Admin.js загружен и запущен');
     
-    // Инициализация выбора бейджа
-    document.querySelectorAll('.badge-option').forEach(option => {
-        option.addEventListener('click', function() {
-            document.querySelectorAll('.badge-option').forEach(opt => opt.classList.remove('selected'));
-            this.classList.add('selected');
-            selectedBadge = this.dataset.value;
-            console.log('🎯 Выбран бейдж:', selectedBadge);
-        });
-    });
+    // Инициализация выбора бейджа - ЭТО ВАЖНО!
+    initBadgeSelector();
     
     // Проверка авторизации
     if (localStorage.getItem(CONFIG.STORAGE_KEYS.AUTH) === 'true') {
