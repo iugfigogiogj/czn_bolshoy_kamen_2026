@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (!searchInput || !searchBtn) return;
     
+    // Функция поиска
     function searchSite() {
         const query = searchInput.value.toLowerCase().trim();
         
@@ -58,10 +59,20 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // 2. Ищем по новостям
-        const news = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.NEWS) || '[]');
-        news.forEach(item => {
-            const searchText = `${item.title} ${item.preview} ${item.content} ${item.details || ''} ${item.tags ? item.tags.join(' ') : ''}`.toLowerCase();
+        // 2. Ищем по новостям (из localStorage или API)
+        let news = [];
+        if (typeof API !== 'undefined' && API.getNews) {
+            try {
+                news = await API.getNews();
+            } catch (e) {
+                news = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.NEWS) || '[]');
+            }
+        } else {
+            news = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.NEWS) || '[]');
+        }
+        
+        for (const item of news) {
+            const searchText = `${item.title} ${item.preview} ${item.content || ''} ${item.details || ''} ${item.tags ? item.tags.join(' ') : ''}`.toLowerCase();
             
             let found = false;
             queryWords.forEach(word => {
@@ -86,12 +97,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     tags: item.tags
                 });
             }
-        });
+        }
         
-        // 3. Ищем по вакансиям
-        const vacancies = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.VACANCIES) || '[]');
-        vacancies.forEach(item => {
-            const detailsText = item.details ? item.details.join(' ') : '';
+        // 3. Ищем по вакансиям (из localStorage или API)
+        let vacancies = [];
+        if (typeof API !== 'undefined' && API.getVacancies) {
+            try {
+                vacancies = await API.getVacancies();
+            } catch (e) {
+                vacancies = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.VACANCIES) || '[]');
+            }
+        } else {
+            vacancies = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.VACANCIES) || '[]');
+        }
+        
+        for (const item of vacancies) {
+            const detailsText = item.details ? (Array.isArray(item.details) ? item.details.join(' ') : item.details) : '';
             const searchText = `${item.title} ${item.company} ${item.salary} ${detailsText}`.toLowerCase();
             
             let found = false;
@@ -111,7 +132,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     details: item.details
                 });
             }
-        });
+        }
         
         // Показываем результаты
         if (results.length === 0) {
@@ -183,7 +204,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <span>🏢 ${highlightText(result.company, query)}</span>
                             <span>💰 ${highlightText(result.salary, query)}</span>
                         </div>
-                        ${result.details ? `<p class="result-details" style="color: #999; font-size: 13px; margin-top: 8px;">${result.details.slice(0, 2).map(d => highlightText(d, query)).join(' • ')}</p>` : ''}
+                        ${result.details ? `<p class="result-details" style="color: #999; font-size: 13px; margin-top: 8px;">${Array.isArray(result.details) ? result.details.slice(0, 2).map(d => highlightText(d, query)).join(' • ') : ''}</p>` : ''}
                     </div>
                 `;
             }
@@ -231,8 +252,12 @@ document.addEventListener('DOMContentLoaded', function() {
         let highlighted = text;
         words.forEach(word => {
             if (word.length < 2) return;
-            const regex = new RegExp(`(${word})`, 'gi');
-            highlighted = highlighted.replace(regex, '<mark>$1</mark>');
+            try {
+                const regex = new RegExp(`(${word})`, 'gi');
+                highlighted = highlighted.replace(regex, '<mark>$1</mark>');
+            } catch (e) {
+                // Игнорируем ошибки регекса
+            }
         });
         return highlighted;
     }
@@ -264,11 +289,40 @@ document.addEventListener('DOMContentLoaded', function() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
     
-    // Обработчики
-    searchBtn.addEventListener('click', searchSite);
-    searchInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') searchSite();
+    // ========== ИСПРАВЛЕННЫЕ ОБРАБОТЧИКИ ==========
+    
+    // Принудительно убираем возможные блокировки CSS
+    searchBtn.style.pointerEvents = 'auto';
+    searchBtn.style.cursor = 'pointer';
+    searchBtn.style.position = 'relative';
+    searchBtn.style.zIndex = '9999';
+    searchBtn.style.opacity = '1';
+    searchBtn.style.visibility = 'visible';
+    
+    // Основной обработчик клика
+    searchBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('🔍 Поиск по кнопке');
+        searchSite();
     });
+    
+    // Дополнительный обработчик на всякий случай
+    searchBtn.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+    });
+    
+    // Обработчик Enter в поле ввода
+    searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            console.log('🔍 Поиск по Enter');
+            searchSite();
+        }
+    });
+    
+    // Проверка при загрузке страницы
+    console.log('✅ Поиск инициализирован');
 });
 
 // ========== СТИЛИ ДЛЯ ПОИСКА ==========
