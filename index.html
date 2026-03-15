@@ -1343,34 +1343,35 @@
             }
         }
 
-        @media (max-width: 480px) {
-            .logo-icon {
-                width: 40px;
-                height: 40px;
-            }
-            
-            .logo h1 {
-                font-size: 18px;
-            }
-            
-            .vacancy-badge {
-                position: static;
-                display: inline-block;
-                margin-bottom: 8px;
-            }
-            
-            .vacancy-card h3 {
-                padding-right: 0;
-            }
-            
-            .search-bar button {
-                padding: 10px 15px;
-            }
-            
-            .map-container {
-                height: 250px;
-            }
-        }
+@media (max-width: 480px) {
+    .logo-icon {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .logo h1 {
+        font-size: 18px;
+    }
+    
+    .vacancy-badge {
+        position: absolute;  /* Меняем static обратно на absolute */
+        top: 10px;           /* Немного корректируем отступы для мобилок */
+        right: 10px;
+        margin-bottom: 0;
+    }
+    
+    .vacancy-card h3 {
+        padding-right: 70px; /* Уменьшаем отступ для мобилок */
+    }
+    
+    .search-bar button {
+        padding: 10px 15px;
+    }
+    
+    .map-container {
+        height: 250px;
+    }
+}
 
         /* Пустые состояния */
         .no-data {
