@@ -119,36 +119,84 @@ document.addEventListener('DOMContentLoaded', function() {
         const modal = document.createElement('div');
         modal.className = 'search-modal';
         
-        let html = '<div class="search-modal-content"><div class="search-modal-header"><h2>Результаты: "' + query + '"</h2><span class="search-modal-close">&times;</span></div>';
-        html += '<div class="search-stats">Найдено: ' + results.length + '</div>';
-        html += '<div class="search-results-list">';
+        let resultsHtml = '';
         
         results.forEach(r => {
             if (r.type === 'page') {
-                html += '<div class="search-result-item" onclick="gotoPage(\'' + r.id + '\')">';
-                html += '<div class="result-header"><span class="result-badge page-badge">📄 Страница</span></div>';
-                html += '<h3 class="result-title">' + r.title + '</h3>';
-                html += '<p class="result-context">' + r.context + '</p></div>';
+                resultsHtml += `
+                    <div class="search-result-item" onclick="gotoPage('${r.id}')">
+                        <div class="result-header">
+                            <span class="result-badge page-badge">📄 Страница</span>
+                        </div>
+                        <h3 class="result-title">${r.title}</h3>
+                        <p class="result-context">${r.context}</p>
+                    </div>
+                `;
             } else if (r.type === 'news') {
-                html += '<div class="search-result-item" onclick="openNews(' + r.id + ')">';
-                html += '<div class="result-header"><span class="result-badge news-badge">📰 Новость</span>';
-                html += '<span class="result-date">' + (r.date || '') + '</span></div>';
-                html += '<h3 class="result-title">' + r.title + '</h3>';
-                html += '<p class="result-context">' + (r.preview || '') + '</p></div>';
+                const tagsHtml = r.tags && r.tags.length > 0 
+                    ? `<div class="result-tags">${r.tags.map(t => `<span class="result-tag">#${t}</span>`).join('')}</div>`
+                    : '';
+                
+                resultsHtml += `
+                    <div class="search-result-item" onclick="openNews(${r.id})">
+                        <div class="result-header">
+                            <span class="result-badge news-badge">📰 Новость</span>
+                            <span class="result-date">${r.date || ''}</span>
+                        </div>
+                        <h3 class="result-title">${r.title}</h3>
+                        <p class="result-context">${r.preview || ''}</p>
+                        ${tagsHtml}
+                    </div>
+                `;
             } else {
-                html += '<div class="search-result-item" onclick="gotoPage(\'hot-vacancies\')">';
-                html += '<div class="result-header"><span class="result-badge vacancy-badge">💼 Вакансия</span></div>';
-                html += '<h3 class="result-title">' + r.title + '</h3>';
-                html += '<div class="result-meta">🏢 ' + r.company + ' | 💰 ' + r.salary + '</div></div>';
+                let badgeText = '';
+                switch(r.badge) {
+                    case 'hot': badgeText = '🔥 Срочно'; break;
+                    case 'attractive': badgeText = '💰 Высокая ЗП'; break;
+                    case 'flexible': badgeText = '⏰ Гибкий график'; break;
+                    case 'housing': badgeText = '🏠 Жилье'; break;
+                    case 'parttime': badgeText = '⚡ Подработка'; break;
+                }
+                
+                resultsHtml += `
+                    <div class="search-result-item" onclick="gotoPage('hot-vacancies')">
+                        <div class="result-header">
+                            <span class="result-badge vacancy-badge">💼 Вакансия</span>
+                            ${badgeText ? `<span class="result-badge-small">${badgeText}</span>` : ''}
+                        </div>
+                        <h3 class="result-title">${r.title}</h3>
+                        <div class="result-meta">
+                            <span>🏢 ${r.company}</span>
+                            <span>💰 ${r.salary}</span>
+                        </div>
+                    </div>
+                `;
             }
         });
         
-        html += '</div></div>';
-        modal.innerHTML = html;
+        modal.innerHTML = `
+            <div class="search-modal-content">
+                <div class="search-modal-header">
+                    <h2>Результаты поиска: "${query}"</h2>
+                    <span class="search-modal-close">&times;</span>
+                </div>
+                <div class="search-stats">Найдено: ${results.length}</div>
+                <div class="search-results-list">
+                    ${resultsHtml}
+                </div>
+            </div>
+        `;
+        
         document.body.appendChild(modal);
         
+        // Закрытие
         modal.querySelector('.search-modal-close').onclick = () => modal.remove();
-        modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+        modal.onclick = (e) => {
+            if (e.target === modal) modal.remove();
+        };
+        
+        // Запрет скролла
+        document.body.style.overflow = 'hidden';
     }
     
     // Обработчики
@@ -165,11 +213,239 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 });
 
-// Функции для глобального доступа
+// Глобальные функции
 window.gotoPage = function(pageId) {
     document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelector(`[data-page="${pageId}"]`)?.classList.add('active');
     document.getElementById(pageId)?.classList.add('active');
+    document.body.style.overflow = '';
     window.scrollTo({ top: 0, behavior: 'smooth' });
 };
+
+window.openNews = function(newsId) {
+    if (typeof openNews === 'function') {
+        openNews(newsId);
+    }
+    document.body.style.overflow = '';
+};
+
+// ========== СТИЛИ ДЛЯ ПОИСКА ==========
+const searchStyles = document.createElement('style');
+searchStyles.textContent = `
+    .search-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 10000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 30px;
+        overflow-y: auto;
+    }
+    
+    .search-modal-content {
+        max-width: 800px;
+        width: 100%;
+        max-height: 85vh;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        animation: modalShow 0.2s ease;
+        margin: auto;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .search-modal-header {
+        padding: 25px 30px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        background: white;
+        border-radius: 16px 16px 0 0;
+        z-index: 10;
+    }
+    
+    .search-modal-header h2 {
+        color: #004999;
+        font-size: 22px;
+        margin: 0;
+    }
+    
+    .search-modal-close {
+        font-size: 32px;
+        color: #999;
+        cursor: pointer;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.2s;
+    }
+    
+    .search-modal-close:hover {
+        background: #f5f5f5;
+        color: #DC3545;
+    }
+    
+    .search-stats {
+        padding: 15px 30px;
+        background: #f8f9fa;
+        border-bottom: 1px solid #eee;
+        font-size: 14px;
+        color: #666;
+    }
+    
+    .search-results-list {
+        padding: 20px 30px 30px;
+        overflow-y: auto;
+        max-height: calc(85vh - 120px);
+    }
+    
+    .search-result-item {
+        padding: 20px;
+        border: 1px solid #eee;
+        border-radius: 12px;
+        margin-bottom: 15px;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: white;
+    }
+    
+    .search-result-item:hover {
+        border-color: #0066CC;
+        box-shadow: 0 5px 15px rgba(0,102,204,0.1);
+        transform: translateY(-2px);
+    }
+    
+    .result-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .result-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 30px;
+        font-size: 12px;
+        font-weight: 600;
+        color: white;
+    }
+    
+    .page-badge {
+        background: #6c757d;
+    }
+    
+    .news-badge {
+        background: #28A745;
+    }
+    
+    .vacancy-badge {
+        background: #0066CC;
+    }
+    
+    .result-badge-small {
+        display: inline-block;
+        padding: 4px 12px;
+        background: #f0f0f0;
+        border-radius: 30px;
+        font-size: 12px;
+    }
+    
+    .result-date {
+        color: #999;
+        font-size: 13px;
+        margin-left: auto;
+    }
+    
+    .result-title {
+        color: #004999;
+        font-size: 18px;
+        margin-bottom: 8px;
+        word-wrap: break-word;
+    }
+    
+    .result-context {
+        color: #666;
+        font-size: 14px;
+        line-height: 1.6;
+        margin-bottom: 10px;
+        word-wrap: break-word;
+    }
+    
+    .result-meta {
+        display: flex;
+        gap: 15px;
+        color: #666;
+        font-size: 14px;
+        flex-wrap: wrap;
+    }
+    
+    .result-tags {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+    }
+    
+    .result-tag {
+        background: #E6F2FF;
+        color: #004999;
+        padding: 2px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+    }
+    
+    mark {
+        background: #ffeb3b;
+        padding: 2px 4px;
+        border-radius: 3px;
+        font-weight: 500;
+    }
+    
+    @keyframes modalShow {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+    }
+    
+    @media (max-width: 600px) {
+        .search-modal {
+            padding: 15px;
+        }
+        
+        .search-modal-header {
+            padding: 20px;
+        }
+        
+        .search-modal-header h2 {
+            font-size: 18px;
+        }
+        
+        .search-stats {
+            padding: 12px 20px;
+        }
+        
+        .search-results-list {
+            padding: 15px 20px 20px;
+        }
+        
+        .search-result-item {
+            padding: 15px;
+        }
+    }
+`;
+
+document.head.appendChild(searchStyles);
