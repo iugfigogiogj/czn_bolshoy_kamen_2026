@@ -723,3 +723,20 @@ function closeModal() {
     deleteId = null;
     deleteType = null;
 }
+// Слушаем изменения в localStorage (для синхронизации между вкладками)
+window.addEventListener('storage', function(e) {
+    if (e.key === 'reviews' || e.key === 'content_updated' || e.key === 'review_updated') {
+        console.log('🔄 Обновление данных из другой вкладки');
+        
+        // Определяем какая вкладка активна и обновляем соответствующие данные
+        const activeTab = document.querySelector('.tab-btn.active')?.textContent;
+        
+        if (activeTab?.includes('НОВОСТИ')) {
+            loadNewsList();
+        } else if (activeTab?.includes('ВАКАНСИИ')) {
+            loadVacanciesList();
+        } else if (activeTab?.includes('ОТЗЫВЫ')) {
+            loadReviews();
+        }
+    }
+});
