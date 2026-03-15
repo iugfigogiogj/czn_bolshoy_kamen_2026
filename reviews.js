@@ -51,7 +51,7 @@ async function submitReview(formData) {
         const result = await API.createReview(formData);
         
         if (result.success) {
-            showStatus(statusDiv, '✅ Спасибо! Отзыв отправлен на модерацию.', 'success');
+            // showStatus(statusDiv, '✅ Спасибо! Отзыв отправлен на модерацию.', 'success');
             return true;
         } else {
             throw new Error('Ошибка отправки');
