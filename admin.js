@@ -636,6 +636,7 @@ document.addEventListener('DOMContentLoaded', function() {
         vacancyForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             console.log('📝 Форма вакансии отправлена!');
+            console.log('Выбранный бейдж:', selectedBadge);
             
             const details = vacancyDetails.filter(d => d.trim() !== '');
             
