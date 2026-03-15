@@ -1434,6 +1434,25 @@
             color: #999;
             font-style: italic;
         }
+        /* ФИКС ДЛЯ КНОПКИ ПОИСКА */
+.search-bar button {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    position: relative !important;
+    z-index: 9999 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.search-bar {
+    position: relative;
+    z-index: 1000;
+}
+
+/* Убираем возможные перекрытия */
+.nav, .header, .main, .footer {
+    pointer-events: auto;
+}
     </style>
 </head>
 <body>
