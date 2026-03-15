@@ -361,7 +361,7 @@ async function approveReview(id) {
     try {
         await API.approveReview(id);
         loadReviews();
-        localStorage.setItem('content_updated', Date.now().toString()); // Сигнал на главную
+        localStorage.setItem('content_updated', Date.now().toString());
     } catch (error) {
         alert('Ошибка при одобрении отзыва');
         console.error(error);
@@ -374,7 +374,7 @@ async function rejectReview(id) {
     try {
         await API.rejectReview(id);
         loadReviews();
-        localStorage.setItem('content_updated', Date.now().toString()); // Сигнал на главную
+        localStorage.setItem('content_updated', Date.now().toString());
     } catch (error) {
         alert('Ошибка при отклонении отзыва');
         console.error(error);
@@ -387,7 +387,7 @@ async function deleteReview(id) {
     try {
         await API.deleteReview(id);
         loadReviews();
-        localStorage.setItem('content_updated', Date.now().toString()); // Сигнал на главную
+        localStorage.setItem('content_updated', Date.now().toString());
     } catch (error) {
         alert('Ошибка при удалении отзыва: ' + error.message);
         console.error(error);
@@ -573,6 +573,16 @@ function resetNewsImage() {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Admin.js загружен и запущен');
     
+    // Инициализация выбора бейджа
+    document.querySelectorAll('.badge-option').forEach(option => {
+        option.addEventListener('click', function() {
+            document.querySelectorAll('.badge-option').forEach(opt => opt.classList.remove('selected'));
+            this.classList.add('selected');
+            selectedBadge = this.dataset.value;
+            console.log('🎯 Выбран бейдж:', selectedBadge);
+        });
+    });
+    
     // Проверка авторизации
     if (localStorage.getItem(CONFIG.STORAGE_KEYS.AUTH) === 'true') {
         console.log('Пользователь авторизован');
@@ -619,7 +629,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 resetNewsForm();
                 await loadNewsList();
-                localStorage.setItem('content_updated', Date.now().toString()); // Сигнал на главную
+                localStorage.setItem('content_updated', Date.now().toString());
                 switchTab('news');
             } catch (error) {
                 console.error('❌ Полная ошибка:', error);
@@ -636,9 +646,11 @@ document.addEventListener('DOMContentLoaded', function() {
         vacancyForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             console.log('📝 Форма вакансии отправлена!');
-            console.log('Выбранный бейдж:', selectedBadge);
+            console.log('1️⃣ selectedBadge =', selectedBadge);
+            console.log('2️⃣ Тип selectedBadge:', typeof selectedBadge);
             
             const details = vacancyDetails.filter(d => d.trim() !== '');
+            console.log('3️⃣ details =', details);
             
             const vacancyData = {
                 title: document.getElementById('vacancyTitle').value,
@@ -649,19 +661,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 apply_link: document.getElementById('vacancyLink').value || ''
             };
 
-            console.log('Отправляю данные:', vacancyData);
+            console.log('4️⃣ vacancyData перед отправкой:', vacancyData);
+            console.log('5️⃣ badge в vacancyData =', vacancyData.badge);
 
             try {
                 if (currentVacancyId) {
+                    console.log('6️⃣ Обновление вакансии ID:', currentVacancyId);
                     await API.updateVacancy(currentVacancyId, vacancyData);
                     alert('Вакансия обновлена!');
                 } else {
+                    console.log('6️⃣ Создание новой вакансии');
                     await API.createVacancy(vacancyData);
                     alert('Вакансия опубликована!');
                 }
                 resetVacancyForm();
                 await loadVacanciesList();
-                localStorage.setItem('content_updated', Date.now().toString()); // Сигнал на главную
+                localStorage.setItem('content_updated', Date.now().toString());
                 switchTab('vacancies');
             } catch (error) {
                 console.error('❌ Ошибка:', error);
@@ -711,7 +726,7 @@ async function deleteItem() {
             await API.deleteVacancy(deleteId);
             loadVacanciesList();
         }
-        localStorage.setItem('content_updated', Date.now().toString()); // Сигнал на главную
+        localStorage.setItem('content_updated', Date.now().toString());
         closeModal();
     } catch (error) {
         alert('Ошибка удаления: ' + error.message);
@@ -724,20 +739,3 @@ function closeModal() {
     deleteId = null;
     deleteType = null;
 }
-// Слушаем изменения в localStorage (для синхронизации между вкладками)
-window.addEventListener('storage', function(e) {
-    if (e.key === 'reviews' || e.key === 'content_updated' || e.key === 'review_updated') {
-        console.log('🔄 Обновление данных из другой вкладки');
-        
-        // Определяем какая вкладка активна и обновляем соответствующие данные
-        const activeTab = document.querySelector('.tab-btn.active')?.textContent;
-        
-        if (activeTab?.includes('НОВОСТИ')) {
-            loadNewsList();
-        } else if (activeTab?.includes('ВАКАНСИИ')) {
-            loadVacanciesList();
-        } else if (activeTab?.includes('ОТЗЫВЫ')) {
-            loadReviews();
-        }
-    }
-});
