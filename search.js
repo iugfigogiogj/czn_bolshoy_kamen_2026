@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Результаты поиска
         const results = [];
+        const queryWords = query.split(/\s+/); // Разбиваем запрос на отдельные слова
         
         // 1. Ищем по страницам сайта
         const pages = document.querySelectorAll('.page');
@@ -25,18 +26,28 @@ document.addEventListener('DOMContentLoaded', function() {
             const pageText = page.innerText || page.textContent;
             const lowerText = pageText.toLowerCase();
             
-            // Ищем вхождения
-            let index = lowerText.indexOf(query);
-            if (index !== -1) {
-                // Берем контекст (100 символов вокруг)
-                const start = Math.max(0, index - 50);
-                const end = Math.min(pageText.length, index + query.length + 50);
-                let context = pageText.substring(start, end).replace(/\s+/g, ' ').trim();
+            let found = false;
+            let context = '';
+            
+            // Проверяем каждое слово из запроса
+            queryWords.forEach(word => {
+                if (word.length < 2) return;
                 
-                // Выделяем найденное слово
-                const regex = new RegExp(query, 'gi');
-                context = context.replace(regex, match => `<mark>${match}</mark>`);
-                
+                const index = lowerText.indexOf(word);
+                if (index !== -1) {
+                    found = true;
+                    // Берем контекст (100 символов вокруг)
+                    const start = Math.max(0, index - 50);
+                    const end = Math.min(pageText.length, index + word.length + 50);
+                    context = pageText.substring(start, end).replace(/\s+/g, ' ').trim();
+                    
+                    // Выделяем найденное слово
+                    const regex = new RegExp(word, 'gi');
+                    context = context.replace(regex, match => `<mark>${match}</mark>`);
+                }
+            });
+            
+            if (found) {
                 results.push({
                     type: 'page',
                     id: pageId,
@@ -52,7 +63,13 @@ document.addEventListener('DOMContentLoaded', function() {
         news.forEach(item => {
             const searchText = `${item.title} ${item.preview} ${item.content} ${item.details || ''} ${item.tags ? item.tags.join(' ') : ''}`.toLowerCase();
             
-            if (searchText.includes(query)) {
+            let found = false;
+            queryWords.forEach(word => {
+                if (word.length < 2) return;
+                if (searchText.includes(word)) found = true;
+            });
+            
+            if (found) {
                 // Находим контекст в preview
                 let context = item.preview;
                 if (context.length > 150) {
@@ -77,7 +94,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const detailsText = item.details ? item.details.join(' ') : '';
             const searchText = `${item.title} ${item.company} ${item.salary} ${detailsText}`.toLowerCase();
             
-            if (searchText.includes(query)) {
+            let found = false;
+            queryWords.forEach(word => {
+                if (word.length < 2) return;
+                if (searchText.includes(word)) found = true;
+            });
+            
+            if (found) {
                 results.push({
                     type: 'vacancy',
                     id: item.id,
@@ -204,8 +227,14 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function highlightText(text, query) {
         if (!text || !query) return text;
-        const regex = new RegExp(`(${query})`, 'gi');
-        return text.replace(regex, '<mark>$1</mark>');
+        const words = query.split(/\s+/);
+        let highlighted = text;
+        words.forEach(word => {
+            if (word.length < 2) return;
+            const regex = new RegExp(`(${word})`, 'gi');
+            highlighted = highlighted.replace(regex, '<mark>$1</mark>');
+        });
+        return highlighted;
     }
     
     // Функция закрытия модалки
@@ -402,6 +431,8 @@ searchStyles.textContent = `
         margin-bottom: 8px;
         clear: both;
         width: 100%;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
     }
     
     .result-context {
@@ -410,6 +441,8 @@ searchStyles.textContent = `
         line-height: 1.6;
         margin-bottom: 10px;
         width: 100%;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
     }
     
     .result-meta {
@@ -427,6 +460,8 @@ searchStyles.textContent = `
         font-size: 13px;
         margin-top: 8px;
         width: 100%;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
     }
     
     .result-tags {
