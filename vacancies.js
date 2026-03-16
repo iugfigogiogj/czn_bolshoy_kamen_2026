@@ -44,7 +44,7 @@ async function loadVacancies() {
                     badgeText = '';
             }
             
-            // Парсим детали
+            // Парсим детали (если они в JSON строке)
             let details = [];
             try {
                 details = vacancy.details ? JSON.parse(vacancy.details) : [];
@@ -57,13 +57,13 @@ async function loadVacancies() {
             html += `
                 <div class="vacancy-card">
                     ${badgeText ? `<div class="vacancy-badge ${badgeClass}">${badgeText}</div>` : ''}
-                    <h3>${vacancy.title}</h3>
-                    <div class="vacancy-company">${vacancy.company}</div>
-                    <div class="vacancy-salary">${vacancy.salary}</div>
+                    <h3 style="word-wrap: break-word !important; overflow-wrap: break-word !important; word-break: break-word !important; hyphens: auto !important;">${vacancy.title}</h3>
+                    <div class="vacancy-company" style="word-wrap: break-word !important; overflow-wrap: break-word !important; word-break: break-word !important; hyphens: auto !important; white-space: normal !important;">${vacancy.company}</div>
+                    <div class="vacancy-salary" style="word-wrap: break-word !important; overflow-wrap: break-word !important;">${vacancy.salary}</div>
                     <ul class="vacancy-details">
                         ${detailsHtml}
                     </ul>
-                    <button class="vacancy-btn" onclick="applyForVacancy(${vacancy.id})">Узнать подробнее</button>
+                    <button class="vacancy-btn" onclick="applyForVacancy(${vacancy.id})" style="white-space: normal !important; word-wrap: break-word !important;">Узнать подробнее</button>
                 </div>
             `;
         });
