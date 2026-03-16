@@ -6,8 +6,9 @@ async function loadVacancies() {
     
     try {
         const vacancies = await API.getVacancies();
+        console.log('Загружены вакансии:', vacancies);
         
-        if (vacancies.length === 0) {
+        if (!vacancies || vacancies.length === 0) {
             vacanciesGrid.innerHTML = '<p class="no-data">Вакансий пока нет</p>';
             return;
         }
@@ -43,32 +44,41 @@ async function loadVacancies() {
                     badgeText = '';
             }
             
-            const details = vacancy.details ? JSON.parse(vacancy.details) : [];
+            // Парсим детали (если они в JSON строке)
+            let details = [];
+            try {
+                details = vacancy.details ? JSON.parse(vacancy.details) : [];
+            } catch (e) {
+                details = vacancy.details || [];
+            }
+            
             const detailsHtml = details.map(d => `<li>${d}</li>`).join('');
             
-html += `
-    <div class="vacancy-card">
-        ${badgeText ? `<div class="vacancy-badge ${badgeClass}">${badgeText}</div>` : ''}
-        <h3 style="white-space: normal !important; word-wrap: break-word !important; word-break: break-word !important;">${vacancy.title}</h3>
-        <div class="vacancy-company">${vacancy.company}</div>
-        <div class="vacancy-salary">${vacancy.salary}</div>
-        <ul class="vacancy-details">
-            ${detailsHtml}
-        </ul>
-        <button class="vacancy-btn" onclick="applyForVacancy(${vacancy.id})">Узнать подробнее</button>
-    </div>
-`;
+            html += `
+                <div class="vacancy-card">
+                    ${badgeText ? `<div class="vacancy-badge ${badgeClass}">${badgeText}</div>` : ''}
+                    <h3>${vacancy.title}</h3>
+                    <div class="vacancy-company">${vacancy.company}</div>
+                    <div class="vacancy-salary">${vacancy.salary}</div>
+                    <ul class="vacancy-details">
+                        ${detailsHtml}
+                    </ul>
+                    <button class="vacancy-btn" onclick="applyForVacancy(${vacancy.id})">Узнать подробнее</button>
+                </div>
+            `;
+        });
         
         vacanciesGrid.innerHTML = html;
     } catch (error) {
-        vacanciesGrid.innerHTML = '<p class="no-data">Ошибка загрузки вакансий</p>';
         console.error('Ошибка загрузки вакансий:', error);
+        vacanciesGrid.innerHTML = '<p class="no-data">Ошибка загрузки вакансий</p>';
     }
 }
 
 async function applyForVacancy(vacancyId) {
     try {
-        const vacancy = await API.getVacancyById(vacancyId);
+        const vacancies = await API.getVacancies();
+        const vacancy = vacancies.find(v => v.id == vacancyId);
         
         if (vacancy) {
             if (vacancy.apply_link && vacancy.apply_link.trim() !== '') {
@@ -81,4 +91,13 @@ async function applyForVacancy(vacancyId) {
         console.error('Ошибка при отклике:', error);
     }
 }
+
+// Загружаем при загрузке страницы
 document.addEventListener('DOMContentLoaded', loadVacancies);
+
+// Слушаем изменения
+window.addEventListener('storage', function(e) {
+    if (e.key === CONFIG.STORAGE_KEYS.VACANCIES || e.key === 'content_updated') {
+        loadVacancies();
+    }
+});
