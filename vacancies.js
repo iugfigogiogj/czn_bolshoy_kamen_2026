@@ -44,7 +44,7 @@ async function loadVacancies() {
                     badgeText = '';
             }
             
-            // Парсим детали (если они в JSON строке)
+            // Парсим детали
             let details = [];
             try {
                 details = vacancy.details ? JSON.parse(vacancy.details) : [];
