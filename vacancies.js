@@ -46,19 +46,18 @@ async function loadVacancies() {
             const details = vacancy.details ? JSON.parse(vacancy.details) : [];
             const detailsHtml = details.map(d => `<li>${d}</li>`).join('');
             
-            html += `
-                <div class="vacancy-card">
-                    ${badgeText ? `<div class="vacancy-badge ${badgeClass}">${badgeText}</div>` : ''}
-                    <h3>${vacancy.title}</h3>
-                    <div class="vacancy-company">${vacancy.company}</div>
-                    <div class="vacancy-salary">${vacancy.salary}</div>
-                    <ul class="vacancy-details">
-                        ${detailsHtml}
-                    </ul>
-                    <button class="vacancy-btn" onclick="applyForVacancy(${vacancy.id})">Узнать подробнее</button>
-                </div>
-            `;
-        });
+html += `
+    <div class="vacancy-card">
+        ${badgeText ? `<div class="vacancy-badge ${badgeClass}">${badgeText}</div>` : ''}
+        <h3>${vacancy.title}</h3>
+        <div class="vacancy-company">${vacancy.company}</div>
+        <div class="vacancy-salary">${vacancy.salary}</div>
+        <ul class="vacancy-details">
+            ${detailsHtml}
+        </ul>
+        <button class="vacancy-btn" onclick="applyForVacancy(${vacancy.id})">Узнать подробнее</button>
+    </div>
+`;
         
         vacanciesGrid.innerHTML = html;
     } catch (error) {
