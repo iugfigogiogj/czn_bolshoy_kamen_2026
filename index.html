@@ -1687,6 +1687,23 @@ mark {
         padding: 12px !important;
     }
 }
+        /* ===== ЖЕСТКИЙ ПЕРЕНОС ДЛЯ ВСЕХ ЭЛЕМЕНТОВ ===== */
+.vacancy-card,
+.vacancy-card * {
+    max-width: 100% !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    word-break: break-word !important;
+    white-space: normal !important;
+}
+
+.vacancy-company {
+    display: block !important;
+    width: 100% !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    line-height: 1.5 !important;
+}
     </style>
 </head>
 <body>
