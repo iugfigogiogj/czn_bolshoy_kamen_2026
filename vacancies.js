@@ -1,5 +1,11 @@
 // ========== ВАКАНСИИ ==========
 
+function truncateText(text, maxLength) {
+    if (!text) return '';
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+}
+
 async function loadVacancies() {
     const vacanciesGrid = document.getElementById('vacanciesGrid');
     if (!vacanciesGrid) return;
@@ -44,7 +50,7 @@ async function loadVacancies() {
                     badgeText = '';
             }
             
-            // Парсим детали (если они в JSON строке)
+            // Парсим детали
             let details = [];
             try {
                 details = vacancy.details ? JSON.parse(vacancy.details) : [];
@@ -54,16 +60,20 @@ async function loadVacancies() {
             
             const detailsHtml = details.map(d => `<li>${d}</li>`).join('');
             
+            // Обрезаем длинные тексты
+            const shortTitle = truncateText(vacancy.title, 60);
+            const shortCompany = truncateText(vacancy.company, 50);
+            
             html += `
                 <div class="vacancy-card">
                     ${badgeText ? `<div class="vacancy-badge ${badgeClass}">${badgeText}</div>` : ''}
-                    <h3 style="word-wrap: break-word !important; overflow-wrap: break-word !important; word-break: break-word !important; hyphens: auto !important;">${vacancy.title}</h3>
-                    <div class="vacancy-company" style="word-wrap: break-word !important; overflow-wrap: break-word !important; word-break: break-word !important; hyphens: auto !important; white-space: normal !important;">${vacancy.company}</div>
-                    <div class="vacancy-salary" style="word-wrap: break-word !important; overflow-wrap: break-word !important;">${vacancy.salary}</div>
+                    <h3 title="${vacancy.title}">${shortTitle}</h3>
+                    <div class="vacancy-company" title="${vacancy.company}">${shortCompany}</div>
+                    <div class="vacancy-salary">${vacancy.salary}</div>
                     <ul class="vacancy-details">
                         ${detailsHtml}
                     </ul>
-                    <button class="vacancy-btn" onclick="applyForVacancy(${vacancy.id})" style="white-space: normal !important; word-wrap: break-word !important;">Узнать подробнее</button>
+                    <button class="vacancy-btn" onclick="applyForVacancy(${vacancy.id})">Узнать подробнее</button>
                 </div>
             `;
         });
