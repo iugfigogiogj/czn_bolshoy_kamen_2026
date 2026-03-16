@@ -79,9 +79,10 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Нет новостей');
         }
         
-        // 3. Ищем по вакансиям
+        // 3. Ищем по вакансиям - ИСПРАВЛЕНО
         try {
             const vacancies = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.VACANCIES) || '[]');
+            
             vacancies.forEach(item => {
                 const detailsText = item.details ? (Array.isArray(item.details) ? item.details.join(' ') : item.details) : '';
                 const searchText = `${item.title} ${item.company} ${item.salary} ${detailsText}`.toLowerCase();
@@ -104,7 +105,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         } catch (e) {
-            console.log('Нет вакансий');
+            console.log('Ошибка при поиске вакансий:', e);
         }
         
         if (results.length === 0) {
@@ -120,9 +121,13 @@ document.addEventListener('DOMContentLoaded', function() {
         modal.className = 'search-modal';
         
         let resultsHtml = '';
+        let newsCount = 0;
+        let pageCount = 0;
+        let vacancyCount = 0;
         
         results.forEach(r => {
             if (r.type === 'page') {
+                pageCount++;
                 resultsHtml += `
                     <div class="search-result-item" onclick="gotoPage('${r.id}')">
                         <div class="result-header">
@@ -133,6 +138,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 `;
             } else if (r.type === 'news') {
+                newsCount++;
                 const tagsHtml = r.tags && r.tags.length > 0 
                     ? `<div class="result-tags">${r.tags.map(t => `<span class="result-tag">#${t}</span>`).join('')}</div>`
                     : '';
@@ -148,21 +154,38 @@ document.addEventListener('DOMContentLoaded', function() {
                         ${tagsHtml}
                     </div>
                 `;
-            } else {
+            } else if (r.type === 'vacancy') {
+                vacancyCount++;
                 let badgeText = '';
+                let badgeIcon = '';
                 switch(r.badge) {
-                    case 'hot': badgeText = '🔥 Срочно'; break;
-                    case 'attractive': badgeText = '💰 Высокая ЗП'; break;
-                    case 'flexible': badgeText = '⏰ Гибкий график'; break;
-                    case 'housing': badgeText = '🏠 Жилье'; break;
-                    case 'parttime': badgeText = '⚡ Подработка'; break;
+                    case 'hot': 
+                        badgeText = 'Срочно';
+                        badgeIcon = '🔥';
+                        break;
+                    case 'attractive': 
+                        badgeText = 'Высокая ЗП';
+                        badgeIcon = '💰';
+                        break;
+                    case 'flexible': 
+                        badgeText = 'Гибкий график';
+                        badgeIcon = '⏰';
+                        break;
+                    case 'housing': 
+                        badgeText = 'Жилье';
+                        badgeIcon = '🏠';
+                        break;
+                    case 'parttime': 
+                        badgeText = 'Подработка';
+                        badgeIcon = '⚡';
+                        break;
                 }
                 
                 resultsHtml += `
                     <div class="search-result-item" onclick="gotoPage('hot-vacancies')">
                         <div class="result-header">
                             <span class="result-badge vacancy-badge">💼 Вакансия</span>
-                            ${badgeText ? `<span class="result-badge-small">${badgeText}</span>` : ''}
+                            ${badgeIcon ? `<span class="result-badge-small">${badgeIcon} ${badgeText}</span>` : ''}
                         </div>
                         <h3 class="result-title">${r.title}</h3>
                         <div class="result-meta">
@@ -180,7 +203,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     <h2>Результаты поиска: "${query}"</h2>
                     <span class="search-modal-close">&times;</span>
                 </div>
-                <div class="search-stats">Найдено: ${results.length}</div>
+                <div class="search-stats">
+                    Найдено: ${results.length} 
+                    (страниц: ${pageCount}, новостей: ${newsCount}, вакансий: ${vacancyCount})
+                </div>
                 <div class="search-results-list">
                     ${resultsHtml}
                 </div>
@@ -190,10 +216,17 @@ document.addEventListener('DOMContentLoaded', function() {
         document.body.appendChild(modal);
         
         // Закрытие
-        modal.querySelector('.search-modal-close').onclick = () => modal.remove();
-        modal.onclick = (e) => {
-            if (e.target === modal) modal.remove();
+        modal.querySelector('.search-modal-close').onclick = function() {
+            modal.remove();
+            document.body.style.overflow = '';
         };
+        
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                modal.remove();
+                document.body.style.overflow = '';
+            }
+        });
         
         // Запрет скролла
         document.body.style.overflow = 'hidden';
@@ -217,8 +250,10 @@ document.addEventListener('DOMContentLoaded', function() {
 window.gotoPage = function(pageId) {
     document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelector(`[data-page="${pageId}"]`)?.classList.add('active');
-    document.getElementById(pageId)?.classList.add('active');
+    const link = document.querySelector(`[data-page="${pageId}"]`);
+    if (link) link.classList.add('active');
+    const page = document.getElementById(pageId);
+    if (page) page.classList.add('active');
     document.body.style.overflow = '';
     window.scrollTo({ top: 0, behavior: 'smooth' });
 };
