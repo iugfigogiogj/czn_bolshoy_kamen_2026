@@ -49,7 +49,7 @@ async function loadVacancies() {
 html += `
     <div class="vacancy-card">
         ${badgeText ? `<div class="vacancy-badge ${badgeClass}">${badgeText}</div>` : ''}
-        <h3>${vacancy.title}</h3>
+        <h3 style="white-space: normal !important; word-wrap: break-word !important; word-break: break-word !important;">${vacancy.title}</h3>
         <div class="vacancy-company">${vacancy.company}</div>
         <div class="vacancy-salary">${vacancy.salary}</div>
         <ul class="vacancy-details">
