@@ -25,8 +25,8 @@ async function loadNews() {
                 ? `<div class="news-tags">${tags.map(t => `<span class="news-tag">#${t}</span>`).join('')}</div>`
                 : '';
             
-           html += `
-    <article class="news-card" onclick="openNews(${item.id})">
+html += `
+    <article class="news-card">
         <div class="news-image-container">
             <img src="${item.image || 'https://via.placeholder.com/800x400?text=Новость'}" 
                  alt="${item.title}" 
@@ -35,10 +35,10 @@ async function loadNews() {
         </div>
         <div class="news-content">
             <div class="news-date">${item.date}</div>
-            <h3>${item.title}</h3>
+            <h3 onclick="openNews(${item.id})" style="cursor: pointer;">${item.title}</h3>
             <p>${item.preview.substring(0, 150)}${item.preview.length > 150 ? '...' : ''}</p>
             ${tagsHtml}
-            <a href="#" class="news-link" onclick="event.preventDefault(); event.stopPropagation(); openNews(${item.id})">Читать далее →</a>
+            <a href="#" class="news-link" onclick="event.preventDefault(); openNews(${item.id})">Читать далее →</a>
         </div>
     </article>
 `;
