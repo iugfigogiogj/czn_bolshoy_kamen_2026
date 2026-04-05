@@ -143,8 +143,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     ? `<div class="result-tags">${r.tags.map(t => `<span class="result-tag">#${t}</span>`).join('')}</div>`
                     : '';
                 
+                // ИСПРАВЛЕНО: используем openNewsFromSearch вместо прямого вызова openNews
                 resultsHtml += `
-                    <div class="search-result-item" onclick="openNews(${r.id})">
+                    <div class="search-result-item" onclick="openNewsFromSearch(${r.id})">
                         <div class="result-header">
                             <span class="result-badge news-badge">📰 Новость</span>
                             <span class="result-date">${r.date || ''}</span>
@@ -253,6 +254,28 @@ window.gotoPage = function(pageId) {
     if (page) page.classList.add('active');
     document.body.style.overflow = '';
     window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+// НОВАЯ ФУНКЦИЯ: открытие новости из поиска (без дублей)
+window.openNewsFromSearch = function(newsId) {
+    // Закрываем модалку поиска
+    const modal = document.querySelector('.search-modal');
+    if (modal) {
+        modal.remove();
+        document.body.style.overflow = '';
+    }
+    
+    // Переключаемся на страницу новостей
+    window.gotoPage('news');
+    
+    // Ждём переключения страницы и открываем новость
+    setTimeout(() => {
+        if (typeof openNews === 'function') {
+            openNews(newsId);
+        } else {
+            console.error('Функция openNews не найдена');
+        }
+    }, 100);
 };
 
 // ========== СТИЛИ ДЛЯ ПОИСКА ==========
