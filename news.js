@@ -12,83 +12,111 @@ async function loadNews() {
             return;
         }
         
-        news.sort((a, b) => {
-            const [d1, m1, y1] = a.date.split('.').map(Number);
-            const [d2, m2, y2] = b.date.split('.').map(Number);
-            return new Date(y2, m2-1, d2) - new Date(y1, m1-1, d1);
+        news.sort(function(a, b) {
+            var da = a.date.split('.');
+            var db = b.date.split('.');
+            return new Date(db[2], db[1]-1, db[0]) - new Date(da[2], da[1]-1, da[0]);
         });
         
-        let html = '';
-        news.forEach(item => {
-            const tags = item.tags ? JSON.parse(item.tags) : [];
-            const tagsHtml = tags.length > 0 
-                ? `<div class="news-tags">${tags.map(t => `<span class="news-tag">#${t}</span>`).join('')}</div>`
-                : '';
+        var html = '';
+        for (var i = 0; i < news.length; i++) {
+            var item = news[i];
+            var tags = [];
+            if (item.tags) {
+                try {
+                    tags = JSON.parse(item.tags);
+                } catch(e) {
+                    tags = [];
+                }
+            }
             
-            html += `
-                <article class="news-card" onclick="openNews(${item.id})">
-                    <div class="news-image-container">
-                        <img src="${item.image || 'https://via.placeholder.com/800x400?text=Новость'}" 
-                             alt="${item.title}" 
-                             class="news-image"
-                             onerror="this.src='https://via.placeholder.com/800x400?text=Новость'">
-                    </div>
-                    <div class="news-content">
-                        <div class="news-date">${item.date}</div>
-                        <h3>${item.title}</h3>
-                        <p>${item.preview.substring(0, 150)}${item.preview.length > 150 ? '...' : ''}</p>
-                        ${tagsHtml}
-                        <a href="#" class="news-link" onclick="event.preventDefault(); openNews(${item.id})">Читать далее →</a>
-                    </div>
-                </article>
-            `;
-        });
+            var tagsHtml = '';
+            if (tags.length > 0) {
+                tagsHtml = '<div class="news-tags">';
+                for (var t = 0; t < tags.length; t++) {
+                    tagsHtml += '<span class="news-tag">#' + tags[t] + '</span>';
+                }
+                tagsHtml += '</div>';
+            }
+            
+            var previewText = item.preview || '';
+            if (previewText.length > 150) {
+                previewText = previewText.substring(0, 150) + '...';
+            }
+            
+            html += '<article class="news-card" onclick="openNews(' + item.id + ')">';
+            html += '<div class="news-image-container">';
+            html += '<img src="' + (item.image || 'https://via.placeholder.com/800x400?text=Новость') + '" alt="' + item.title + '" class="news-image" onerror="this.src=\'https://via.placeholder.com/800x400?text=Новость\'">';
+            html += '</div>';
+            html += '<div class="news-content">';
+            html += '<div class="news-date">' + item.date + '</div>';
+            html += '<h3>' + item.title + '</h3>';
+            html += '<p>' + previewText + '</p>';
+            html += tagsHtml;
+            html += '<a href="#" class="news-link" onclick="event.preventDefault(); openNews(' + item.id + ')">Читать далее →</a>';
+            html += '</div>';
+            html += '</article>';
+        }
         
         newsGrid.innerHTML = html;
     } catch (error) {
-        newsGrid.innerHTML = '<p class="no-data">Ошибка загрузки новостей</p>';
         console.error('Ошибка загрузки новостей:', error);
+        newsGrid.innerHTML = '<p class="no-data">Ошибка загрузки новостей</p>';
     }
 }
 
 async function openNews(newsId) {
     try {
         const news = await API.getNews();
-        const item = news.find(n => n.id == newsId);
+        var item = null;
+        for (var i = 0; i < news.length; i++) {
+            if (news[i].id == newsId) {
+                item = news[i];
+                break;
+            }
+        }
         if (!item) return;
         
-        const existingModal = document.querySelector('.news-modal');
-        if (existingModal) existingModal.remove();
+        var oldModal = document.querySelector('.news-modal');
+        if (oldModal) oldModal.remove();
         
-        const tags = item.tags ? JSON.parse(item.tags) : [];
-        const tagsHtml = tags.length > 0 
-            ? `<div class="news-modal-tags">${tags.map(t => `<span class="news-modal-tag">#${t}</span>`).join('')}</div>`
-            : '';
+        var tags = [];
+        if (item.tags) {
+            try {
+                tags = JSON.parse(item.tags);
+            } catch(e) {
+                tags = [];
+            }
+        }
         
-        const detailsHtml = item.details ? `<div class="news-modal-details">${item.details.replace(/\n/g, '<br>')}</div>` : '';
-        const contentHtml = item.content ? `<div class="news-modal-full">${item.content}</div>` : '';
+        var tagsHtml = '';
+        if (tags.length > 0) {
+            tagsHtml = '<div class="news-modal-tags">';
+            for (var t = 0; t < tags.length; t++) {
+                tagsHtml += '<span class="news-modal-tag">#' + tags[t] + '</span>';
+            }
+            tagsHtml += '</div>';
+        }
         
-        const modal = document.createElement('div');
+        var detailsHtml = item.details ? '<div class="news-modal-details">' + item.details.replace(/\n/g, '<br>') + '</div>' : '';
+        var contentHtml = item.content ? '<div class="news-modal-full">' + item.content + '</div>' : '';
+        
+        var modal = document.createElement('div');
         modal.className = 'news-modal';
-        modal.innerHTML = `
-            <div class="news-modal-content">
-                <div class="news-modal-close">&times;</div>
-                <div class="news-modal-image-container">
-                    <img src="${item.image || 'https://via.placeholder.com/800x400'}" 
-                         alt="${item.title}"
-                         class="news-modal-image"
-                         onerror="this.src='https://via.placeholder.com/800x400?text=Новость'">
-                </div>
-                <div class="news-modal-body">
-                    <div class="news-modal-date">${item.date}</div>
-                    <h2 class="news-modal-title">${item.title}</h2>
-                    ${tagsHtml}
-                    <div class="news-modal-preview">${item.preview}</div>
-                    ${detailsHtml}
-                    ${contentHtml}
-                </div>
-            </div>
-        `;
+        modal.innerHTML = '<div class="news-modal-content">' +
+            '<div class="news-modal-close">&times;</div>' +
+            '<div class="news-modal-image-container">' +
+            '<img src="' + (item.image || 'https://via.placeholder.com/800x400') + '" alt="' + item.title + '" class="news-modal-image" onerror="this.src=\'https://via.placeholder.com/800x400?text=Новость\'">' +
+            '</div>' +
+            '<div class="news-modal-body">' +
+            '<div class="news-modal-date">' + item.date + '</div>' +
+            '<h2 class="news-modal-title">' + item.title + '</h2>' +
+            tagsHtml +
+            '<div class="news-modal-preview">' + (item.preview || '') + '</div>' +
+            detailsHtml +
+            contentHtml +
+            '</div>' +
+            '</div>';
         
         document.body.appendChild(modal);
         
