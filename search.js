@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Нет новостей');
         }
         
-        // 3. Ищем по вакансиям - ИСПРАВЛЕНО
+        // 3. Ищем по вакансиям
         try {
             const vacancies = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.VACANCIES) || '[]');
             
@@ -215,7 +215,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         document.body.appendChild(modal);
         
-        // Закрытие
         modal.querySelector('.search-modal-close').onclick = function() {
             modal.remove();
             document.body.style.overflow = '';
@@ -228,11 +227,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Запрет скролла
         document.body.style.overflow = 'hidden';
     }
     
-    // Обработчики
     searchBtn.onclick = function(e) {
         e.preventDefault();
         searchSite();
@@ -256,13 +253,6 @@ window.gotoPage = function(pageId) {
     if (page) page.classList.add('active');
     document.body.style.overflow = '';
     window.scrollTo({ top: 0, behavior: 'smooth' });
-};
-
-window.openNews = function(newsId) {
-    if (typeof openNews === 'function') {
-        openNews(newsId);
-    }
-    document.body.style.overflow = '';
 };
 
 // ========== СТИЛИ ДЛЯ ПОИСКА ==========
