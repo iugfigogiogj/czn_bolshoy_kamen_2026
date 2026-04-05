@@ -12,6 +12,7 @@ async function loadNews() {
             return;
         }
         
+        // Сортировка по дате (свежие сверху)
         news.sort((a, b) => {
             const [d1, m1, y1] = a.date.split('.').map(Number);
             const [d2, m2, y2] = b.date.split('.').map(Number);
@@ -20,28 +21,43 @@ async function loadNews() {
         
         let html = '';
         news.forEach(item => {
-            const tags = item.tags ? JSON.parse(item.tags) : [];
+            // Парсим теги (если строка - парсим, если массив - оставляем)
+            let tags = [];
+            if (item.tags) {
+                if (typeof item.tags === 'string') {
+                    try {
+                        tags = JSON.parse(item.tags);
+                    } catch(e) { tags = []; }
+                } else {
+                    tags = item.tags;
+                }
+            }
+            
+            // HTML для тегов
             const tagsHtml = tags.length > 0 
-                ? `<div class="news-tags">${tags.map(t => `<span class="news-tag">#${t}</span>`).join('')}</div>`
+                ? '<div class="news-tags">' + tags.map(t => '<span class="news-tag">#' + t + '</span>').join('') + '</div>'
                 : '';
             
-html += `
-    <article class="news-card" onclick="openNews(${item.id})">
-        <div class="news-image-container">
-            <img src="${item.image || 'https://via.placeholder.com/800x400?text=Новость'}" 
-                 alt="${item.title}" 
-                 class="news-image"
-                 onerror="this.src='https://via.placeholder.com/800x400?text=Новость'">
-        </div>
-        <div class="news-content">
-            <div class="news-date">${item.date}</div>
-            <h3>${item.title}</h3>
-            <p>${item.preview.substring(0, 150)}${item.preview.length > 150 ? '...' : ''}</p>
-            ${tagsHtml}
-            <a href="#" class="news-link" onclick="event.preventDefault(); openNews(${item.id})">Читать далее →</a>
-        </div>
-    </article>
-`;
+            // Краткое описание (обрезаем если длинное)
+            let previewText = item.preview || '';
+            if (previewText.length > 150) {
+                previewText = previewText.substring(0, 150) + '...';
+            }
+            
+            // Формируем карточку (без onclick на article, чтобы не было двойного окна)
+            html += '<article class="news-card">';
+            html += '<div class="news-image-container">';
+            html += '<img src="' + (item.image || 'https://via.placeholder.com/800x400?text=Новость') + '" alt="' + item.title + '" class="news-image" onerror="this.src=\'https://via.placeholder.com/800x400?text=Новость\'">';
+            html += '</div>';
+            html += '<div class="news-content">';
+            html += '<div class="news-date">' + item.date + '</div>';
+            html += '<h3 class="news-title" onclick="openNews(' + item.id + ')">' + item.title + '</h3>';
+            html += '<p class="news-preview">' + previewText + '</p>';
+            html += tagsHtml;
+            html += '<a href="#" class="news-link" onclick="event.preventDefault(); openNews(' + item.id + ')">Читать далее →</a>';
+            html += '</div>';
+            html += '</article>';
+        });
         
         newsGrid.innerHTML = html;
     } catch (error) {
@@ -59,35 +75,41 @@ async function openNews(newsId) {
         const existingModal = document.querySelector('.news-modal');
         if (existingModal) existingModal.remove();
         
-        const tags = item.tags ? JSON.parse(item.tags) : [];
+        // Парсим теги
+        let tags = [];
+        if (item.tags) {
+            if (typeof item.tags === 'string') {
+                try {
+                    tags = JSON.parse(item.tags);
+                } catch(e) { tags = []; }
+            } else {
+                tags = item.tags;
+            }
+        }
+        
         const tagsHtml = tags.length > 0 
-            ? `<div class="news-modal-tags">${tags.map(t => `<span class="news-modal-tag">#${t}</span>`).join('')}</div>`
+            ? '<div class="news-modal-tags">' + tags.map(t => '<span class="news-modal-tag">#' + t + '</span>').join('') + '</div>'
             : '';
         
-        const detailsHtml = item.details ? `<div class="news-modal-details">${item.details.replace(/\n/g, '<br>')}</div>` : '';
-        const contentHtml = item.content ? `<div class="news-modal-full">${item.content}</div>` : '';
+        const detailsHtml = item.details ? '<div class="news-modal-details">' + item.details.replace(/\n/g, '<br>') + '</div>' : '';
+        const contentHtml = item.content ? '<div class="news-modal-full">' + item.content + '</div>' : '';
         
         const modal = document.createElement('div');
         modal.className = 'news-modal';
-        modal.innerHTML = `
-            <div class="news-modal-content">
-                <div class="news-modal-close">&times;</div>
-                <div class="news-modal-image-container">
-                    <img src="${item.image || 'https://via.placeholder.com/800x400'}" 
-                         alt="${item.title}"
-                         class="news-modal-image"
-                         onerror="this.src='https://via.placeholder.com/800x400?text=Новость'">
-                </div>
-                <div class="news-modal-body">
-                    <div class="news-modal-date">${item.date}</div>
-                    <h2 class="news-modal-title">${item.title}</h2>
-                    ${tagsHtml}
-                    <div class="news-modal-preview">${item.preview}</div>
-                    ${detailsHtml}
-                    ${contentHtml}
-                </div>
-            </div>
-        `;
+        modal.innerHTML = '<div class="news-modal-content">' +
+            '<div class="news-modal-close">&times;</div>' +
+            '<div class="news-modal-image-container">' +
+            '<img src="' + (item.image || 'https://via.placeholder.com/800x400') + '" alt="' + item.title + '" class="news-modal-image" onerror="this.src=\'https://via.placeholder.com/800x400?text=Новость\'">' +
+            '</div>' +
+            '<div class="news-modal-body">' +
+            '<div class="news-modal-date">' + item.date + '</div>' +
+            '<h2 class="news-modal-title">' + item.title + '</h2>' +
+            tagsHtml +
+            '<div class="news-modal-preview">' + (item.preview || '') + '</div>' +
+            detailsHtml +
+            contentHtml +
+            '</div>' +
+            '</div>';
         
         document.body.appendChild(modal);
         
