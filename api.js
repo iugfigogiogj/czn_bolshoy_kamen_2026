@@ -1,125 +1,154 @@
-// ========== ОБЩИЙ МОДУЛЬ ДЛЯ РАБОТЫ С API ==========
+// ========== API ДЛЯ РАБОТЫ С SUPABASE ==========
 
 const API = {
-    // Базовые методы
-    async get(endpoint) {
-        try {
-            const response = await fetch(`${CONFIG.API_URL}${endpoint}`);
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            return await response.json();
-        } catch (error) {
-            console.error(`API GET ${endpoint} error:`, error);
-            throw error;
-        }
-    },
-
-    async post(endpoint, data) {
-        try {
-            const response = await fetch(`${CONFIG.API_URL}${endpoint}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            return await response.json();
-        } catch (error) {
-            console.error(`API POST ${endpoint} error:`, error);
-            throw error;
-        }
-    },
-
-    async put(endpoint, data) {
-        try {
-            const response = await fetch(`${CONFIG.API_URL}${endpoint}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            return await response.json();
-        } catch (error) {
-            console.error(`API PUT ${endpoint} error:`, error);
-            throw error;
-        }
-    },
-
-    async delete(endpoint) {
-        try {
-            const response = await fetch(`${CONFIG.API_URL}${endpoint}`, {
-                method: 'DELETE'
-            });
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            return await response.json();
-        } catch (error) {
-            console.error(`API DELETE ${endpoint} error:`, error);
-            throw error;
-        }
-    },
-
     // ========== НОВОСТИ ==========
     async getNews() {
-        return await this.get('/api/news');
+        const { data, error } = await supabaseClient
+            .from('news')
+            .select('*')
+            .order('id', { ascending: false });
+        if (error) throw error;
+        return data;
     },
 
     async getNewsById(id) {
-        return await this.get(`/api/news/${id}`);
+        const { data, error } = await supabaseClient
+            .from('news')
+            .select('*')
+            .eq('id', id)
+            .single();
+        if (error) throw error;
+        return data;
     },
 
     async createNews(newsData) {
-        return await this.post('/api/news', newsData);
+        const { data, error } = await supabaseClient
+            .from('news')
+            .insert([newsData])
+            .select();
+        if (error) throw error;
+        return { id: data[0].id, success: true };
     },
 
     async updateNews(newsId, newsData) {
-        return await this.put(`/api/news/${newsId}`, newsData);
+        const { error } = await supabaseClient
+            .from('news')
+            .update(newsData)
+            .eq('id', newsId);
+        if (error) throw error;
+        return { success: true };
     },
 
     async deleteNews(newsId) {
-        return await this.delete(`/api/news/${newsId}`);
+        const { error } = await supabaseClient
+            .from('news')
+            .delete()
+            .eq('id', newsId);
+        if (error) throw error;
+        return { success: true };
     },
 
     // ========== ВАКАНСИИ ==========
     async getVacancies() {
-        return await this.get('/api/vacancies');
+        const { data, error } = await supabaseClient
+            .from('vacancies')
+            .select('*')
+            .order('id', { ascending: false });
+        if (error) throw error;
+        return data;
     },
 
     async getVacancyById(id) {
-        return await this.get(`/api/vacancies/${id}`);
+        const { data, error } = await supabaseClient
+            .from('vacancies')
+            .select('*')
+            .eq('id', id)
+            .single();
+        if (error) throw error;
+        return data;
     },
 
     async createVacancy(vacancyData) {
-        return await this.post('/api/vacancies', vacancyData);
+        const { data, error } = await supabaseClient
+            .from('vacancies')
+            .insert([vacancyData])
+            .select();
+        if (error) throw error;
+        return { id: data[0].id, success: true };
     },
 
     async updateVacancy(vacancyId, vacancyData) {
-        return await this.put(`/api/vacancies/${vacancyId}`, vacancyData);
+        const { error } = await supabaseClient
+            .from('vacancies')
+            .update(vacancyData)
+            .eq('id', vacancyId);
+        if (error) throw error;
+        return { success: true };
     },
 
     async deleteVacancy(vacancyId) {
-        return await this.delete(`/api/vacancies/${vacancyId}`);
+        const { error } = await supabaseClient
+            .from('vacancies')
+            .delete()
+            .eq('id', vacancyId);
+        if (error) throw error;
+        return { success: true };
     },
 
     // ========== ОТЗЫВЫ ==========
     async getPublishedReviews() {
-        return await this.get('/api/reviews/published');
+        const { data, error } = await supabaseClient
+            .from('reviews')
+            .select('*')
+            .eq('status', 'approved')
+            .order('id', { ascending: false });
+        if (error) throw error;
+        return data;
     },
 
     async getPendingReviews() {
-        return await this.get('/api/reviews/pending');
+        const { data, error } = await supabaseClient
+            .from('reviews')
+            .select('*')
+            .eq('status', 'pending')
+            .order('id', { ascending: false });
+        if (error) throw error;
+        return data;
     },
 
     async createReview(reviewData) {
-        return await this.post('/api/reviews', reviewData);
+        const { data, error } = await supabaseClient
+            .from('reviews')
+            .insert([reviewData])
+            .select();
+        if (error) throw error;
+        return { id: data[0].id, success: true };
     },
 
     async approveReview(reviewId) {
-        return await this.post(`/api/reviews/${reviewId}/approve`, {});
+        const { error } = await supabaseClient
+            .from('reviews')
+            .update({ status: 'approved' })
+            .eq('id', reviewId);
+        if (error) throw error;
+        return { success: true };
     },
 
     async rejectReview(reviewId) {
-        return await this.post(`/api/reviews/${reviewId}/reject`, {});
+        const { error } = await supabaseClient
+            .from('reviews')
+            .delete()
+            .eq('id', reviewId);
+        if (error) throw error;
+        return { success: true };
     },
 
     async deleteReview(reviewId) {
-        return await this.delete(`/api/reviews/${reviewId}`);
+        const { error } = await supabaseClient
+            .from('reviews')
+            .delete()
+            .eq('id', reviewId);
+        if (error) throw error;
+        return { success: true };
     }
 };
