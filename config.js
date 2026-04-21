@@ -1,8 +1,8 @@
 // ========== КОНФИГУРАЦИЯ САЙТА ==========
 
 const CONFIG = {
-    // URL твоего сервера на Railway
-    API_URL: 'https://czbn-server-production-fa76.up.railway.app',
+    // URL сервера
+    API_URL: 'https://CZN.pythonanywhere.com',
     
     // Настройки сайта
     SITE_NAME: 'ЦЗН г. Большой Камень',
