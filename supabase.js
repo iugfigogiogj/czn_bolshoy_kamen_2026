@@ -1,5 +1,5 @@
 // ========== ПОДКЛЮЧЕНИЕ К SUPABASE ==========
-const SUPABASE_URL = 'https://kobehbqvfcpuwlubwaus.supabase.co';
+const SUPABASE_URL = 'https://supabase-proxy-ln3q.onrender.com';
 const SUPABASE_KEY = 'sb_publishable_kHCVJfX3Qh2uGvZSkARa-Q_jDtqfDu7';
 
 // Глобальный объект supabase
