@@ -1,5 +1,5 @@
-// ========== ПОДКЛЮЧЕНИЕ К SUPABASE ==========
-const SUPABASE_URL = 'https://supabase-proxy-ln3q.onrender.com';
+// ========== ПОДКЛЮЧЕНИЕ К SUPABASE ЧЕРЕЗ ПРОКСИ NETLIFY ==========
+const SUPABASE_URL = window.location.origin + '/supabase';
 const SUPABASE_KEY = 'sb_publishable_kHCVJfX3Qh2uGvZSkARa-Q_jDtqfDu7';
 
 // Глобальный объект supabase
@@ -12,7 +12,7 @@ function initSupabase() {
         return;
     }
     supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    console.log('✅ Supabase инициализирован');
+    console.log('✅ Supabase инициализирован через Netlify Proxy');
     return supabaseClient;
 }
 
