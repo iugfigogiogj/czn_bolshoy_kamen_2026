@@ -1,5 +1,5 @@
 // ========== ПОДКЛЮЧЕНИЕ К SUPABASE ЧЕРЕЗ ПРОКСИ NETLIFY ==========
-const SUPABASE_URL = window.location.origin + '/supabase';
+const SUPABASE_URL = 'https://onrender.com';
 const SUPABASE_KEY = 'sb_publishable_kHCVJfX3Qh2uGvZSkARa-Q_jDtqfDu7';
 
 // Глобальный объект supabase
